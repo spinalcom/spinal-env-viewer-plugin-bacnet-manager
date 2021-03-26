@@ -19,6 +19,22 @@
                </md-field>
             </div>
 
+            <div>
+               <md-field class="contextInput">
+                  <label>broadcast network IP address</label>
+                  <md-input v-model="network.address"></md-input>
+                  <span class="md-helper-text">To use the default(255.255.255.255) leave this field empty</span>
+               </md-field>
+            </div>
+
+            <div>
+               <md-field class="contextInput">
+                  <label>broadcast network port</label>
+                  <md-input v-model="network.port"></md-input>
+                  <span class="md-helper-text">To use the default port (47808) leave this field empty</span>
+               </md-field>
+            </div>
+
          </md-step>
 
          <md-step
@@ -71,9 +87,11 @@
 <script>
 import { NETWORK_TYPE } from "../../js/constants";
 import discoverTable from "../components/discoverTable.vue";
-import { STATES } from "../../js/stateEnum";
+// import { STATES } from "../../js/stateEnum";
 
-import { SpinalDisoverModel } from "../../model/SpinalDiscoverModel";
+// import { SpinalDisoverModel } from "../../model/SpinalDiscoverModel";
+
+import { STATES, SpinalDisoverModel } from "spinal-model-bacnet";
 
 export default {
    name: "discoverNetworkPanel",
@@ -92,6 +110,8 @@ export default {
          devices: [],
          selected: [],
          network: {
+            address: "255.255.255.255",
+            port: 47808,
             name: "",
             type: NETWORK_TYPE,
          },
@@ -99,7 +119,6 @@ export default {
    },
    methods: {
       opened(params) {
-         console.log(params);
          this.graph = params.graph;
          this.context = params.context.get();
       },
@@ -113,27 +132,24 @@ export default {
                this.context,
                this.network
             );
-            await this.addToGraph();
+
+            console.log(this.spinalDiscover);
+
+            await this.spinalDiscover.addToGraph(this.graph);
+            // await this.addToGraph();
          }
 
          this.spinalDiscover.network.name.set(this.network.name);
-         this.spinalDiscover.state.set(STATES.discovering);
+         // this.spinalDiscover.state.set(STATES.discovering);
+         this.spinalDiscover.setDiscoveringMode();
          this.getDevicesFound();
-
-         // console.log("this.spinalDiscover", this.spinalDiscover);
-         // if (this.graph.info.discover) {
-         //    this.ModContextAttr(this.graph.info.discover.context);
-         //    this.ModNetworkAttr(this.graph.info.discover.network);
-         //    this.graph.info.discover.status.set(STATES.discovering);
-         //    this.state = STATES.discovering;
-         //    this.getDevicesFound();
-         // }
       },
 
       createNodes() {
          console.log("creating...");
          this.spinalDiscover.devices.set(this.selected);
-         this.spinalDiscover.state.set(STATES.creating);
+         // this.spinalDiscover.state.set(STATES.creating);
+         this.spinalDiscover.setCreatingMode();
       },
 
       getDevicesFound() {
@@ -146,7 +162,7 @@ export default {
                   console.log("discovered");
                   this.state = STATES.discovered;
                   this.devices = this.spinalDiscover.devices.get();
-                  // console.log(this.graph.info.discover.devices.get());
+                  console.log(this.spinalDiscover.devices.get());
                   break;
                case STATES.timeout:
                   console.log("timeout");
@@ -204,23 +220,26 @@ export default {
          this.selected = devices;
       },
 
-      async addToGraph() {
-         if (!this.graph.info.discover) {
-            const x = new Lst();
-            x.push(this.spinalDiscover);
-            this.graph.info.add_attr({
-               discover: new Ptr(x),
-            });
-            Promise.resolve(true);
-         } else {
-            return new Promise((resolve, reject) => {
-               this.graph.info.discover.load((list) => {
-                  list.push(this.spinalDiscover);
-                  resolve(true);
-               });
-            });
-         }
-      },
+      // async addToGraph() {
+      //    if (!this.graph.info.discover) {
+      //       const x = new Lst();
+      //       x.push(this.spinalDiscover);
+      //       this.graph.info.add_attr({
+      //          discover: new Ptr(x),
+      //       });
+      //       Promise.resolve(true);
+      //    } else {
+      //       return new Promise((resolve, reject) => {
+      //          this.graph.info.discover.load((list) => {
+      //             list.push(this.spinalDiscover);
+      //             resolve(true);
+      //          });
+      //       });
+      //    }
+      // },
+   },
+   beforeDestroy() {
+      this.spinalDiscover.remove(this.graph);
    },
 };
 </script>

@@ -7,7 +7,7 @@ const HEADERBAR = "GraphManagerTopBar";
 class CreateNetworkContextBtn extends SpinalContextApp {
    constructor() {
       super(
-         "Create GTB network context",
+         "Create BMS network context",
          "This button allows to create network context", {
          icon: "network_check",
          icon_type: "in",

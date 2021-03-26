@@ -7,7 +7,7 @@ const SIDEBAR = "GraphManagerSideBar";
 class DiscoverNetworkBtn extends SpinalContextApp {
    constructor() {
       super(
-         "Create network",
+         "Discover and Create BMS subnetwork",
          "This button allows to discover network and create", {
          icon: "network_check",
          icon_type: "in",

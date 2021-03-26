@@ -4,7 +4,7 @@
       :md-active.sync="showDialog"
       @md-closed="closeDialog(false)"
    >
-      <md-dialog-title>Create GTB context</md-dialog-title>
+      <md-dialog-title>Create BMS network context</md-dialog-title>
       <md-dialog-content>
          <md-field>
             <label>Context Name</label>
