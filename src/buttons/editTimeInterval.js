@@ -1,6 +1,6 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 import { SpinalBmsDevice } from "spinal-model-bmsnetwork";
-import { SpinalListenerModel } from "../model/SpinalListenerModel";
+import { SpinalListenerModel } from "spinal-model-bacnet";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 

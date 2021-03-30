@@ -1,5 +1,4 @@
 <template>
-
    <md-dialog
       :md-active.sync="showDialog"
       @md-closed="closeDialog(false)"

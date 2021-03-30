@@ -92,6 +92,7 @@ import discoverTable from "../components/discoverTable.vue";
 // import { SpinalDisoverModel } from "../../model/SpinalDiscoverModel";
 
 import { STATES, SpinalDisoverModel } from "spinal-model-bacnet";
+import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 
 export default {
    name: "discoverNetworkPanel",
@@ -104,6 +105,7 @@ export default {
       this.spinalDiscover;
       this.context;
       this.graph;
+      this.organ;
       this.devicesBindProcess;
       return {
          state: STATES.reseted,
@@ -118,9 +120,12 @@ export default {
       };
    },
    methods: {
-      opened(params) {
+      async opened(params) {
          this.graph = params.graph;
          this.context = params.context.get();
+         this.organ = await this.getOrganModel(params.selectedNode.id.get());
+
+         console.log("this.organ", this.organ);
       },
 
       closed() {},
@@ -130,12 +135,13 @@ export default {
             this.spinalDiscover = new SpinalDisoverModel(
                this.graph,
                this.context,
-               this.network
+               this.network,
+               this.organ
             );
 
             console.log(this.spinalDiscover);
 
-            await this.spinalDiscover.addToGraph(this.graph);
+            await this.spinalDiscover.addToGraph();
             // await this.addToGraph();
          }
 
@@ -186,6 +192,11 @@ export default {
             }
             // this.devices = this.graph.info.discover.devices.get();
          });
+      },
+
+      getOrganModel(nodeId) {
+         const realNode = SpinalGraphService.getRealNode(nodeId);
+         return realNode.getElement();
       },
 
       ModContextAttr(context) {
