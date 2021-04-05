@@ -27,23 +27,13 @@
                <md-table-cell md-label="Name">{{ item.name.get() }}</md-table-cell>
                <md-table-cell md-label="Type">{{ item.type.get() }}</md-table-cell>
                <md-table-cell md-label="Action">
-                  <md-button
-                     v-if="!existeInReference(item._server_id)"
-                     class="md-icon-button md-primary"
-                     v-tooltip="'create and Link Node'"
-                     @click="createAndLinkNode(item._server_id)"
-                  >
-                     <md-icon>drive_file_rename_outline</md-icon>
-                  </md-button>
-
-                  <md-button
-                     v-else
-                     class="md-icon-button md-accent"
-                     v-tooltip="'Remove and unlink Node'"
-                     @click="removeAndUnlinkNode(item._server_id)"
-                  >
-                     <md-icon>delete</md-icon>
-                  </md-button>
+                  <organ-button
+                     :ref="item._server_id"
+                     :server_id="item._server_id"
+                     :contextId="contextId"
+                     @add="createAndLinkNode"
+                     @remove="removeAndUnlinkNode"
+                  ></organ-button>
                </md-table-cell>
 
             </md-table-row>
@@ -65,14 +55,18 @@
 
 <script>
 import { SpinalBacnetPluginService } from "../../../service";
+import OrganBtn from "../components/addOrganBtn.vue";
 export default {
    name: "addOrganDialog",
    props: ["onFinised"],
+   components: {
+      "organ-button": OrganBtn,
+   },
    data() {
       // this.organs = new Lst();
-      this.contextId;
 
       return {
+         contextId: undefined,
          organsDisplayed: [],
          showDialog: true,
       };
@@ -98,10 +92,12 @@ export default {
          }
       },
 
-      getOrgans() {
+      async getOrgans() {
          // const organs = [];
          const connection = spinal.spinalSystem.conn;
-         this.organsDisplayed = SpinalBacnetPluginService.getOrgans(connection);
+         this.organsDisplayed = await SpinalBacnetPluginService.getOrgans(
+            connection
+         );
          // // spinalCore.load(connection,);
          // spinalCore.load_type(connection, "SpinalOrganConfigModel", (file) => {
          //    // const obj = {
@@ -114,11 +110,23 @@ export default {
       },
 
       createAndLinkNode(server_id) {
-         SpinalBacnetPluginService.addToReference(server_id, this.contextId);
+         SpinalBacnetPluginService.addToReference(server_id, this.contextId)
+            .then((result) => {
+               this.$refs[server_id].isLinked = true;
+            })
+            .catch(() => {
+               this.$refs[server_id].isLinked = false;
+            });
       },
 
       removeAndUnlinkNode(server_id) {
-         SpinalBacnetPluginService.removeToReference(server_id, this.contextId);
+         SpinalBacnetPluginService.removeToReference(server_id, this.contextId)
+            .then(() => {
+               this.$refs[server_id].isLinked = false;
+            })
+            .catch((err) => {
+               this.$refs[server_id].isLinked = false;
+            });
       },
 
       existeInReference(server_id) {
