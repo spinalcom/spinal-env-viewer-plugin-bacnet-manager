@@ -1,5 +1,5 @@
 <template>
-   <div>
+   <div class="discover_container">
       <!-- <md-field>
          <label>Network Name</label>
          <md-input v-model="network.name"></md-input>
@@ -12,27 +12,43 @@
             md-label="Network name"
             md-description="Network name"
          >
-            <div>
-               <md-field class="contextInput">
-                  <label>Network Name</label>
-                  <md-input v-model="network.name"></md-input>
-               </md-field>
-            </div>
+            <div class="stepContainer">
+               <div class="header">
+                  <div
+                     class="radio"
+                     :class="{'isActive' : network.useBroadcast}"
+                  >
+                     <md-radio
+                        class="md-primary"
+                        v-model="network.useBroadcast"
+                        :value="true"
+                     >Broadcast</md-radio>
+                  </div>
 
-            <div>
-               <md-field class="contextInput">
-                  <label>broadcast network IP address</label>
-                  <md-input v-model="network.address"></md-input>
-                  <span class="md-helper-text">To use the default(255.255.255.255) leave this field empty</span>
-               </md-field>
-            </div>
+                  <div
+                     class="radio"
+                     :class="{'isActive' : !network.useBroadcast}"
+                  >
+                     <md-radio
+                        class="md-primary"
+                        v-model="network.useBroadcast"
+                        :value="false"
+                     >Unicast</md-radio>
+                  </div>
+               </div>
 
-            <div>
-               <md-field class="contextInput">
-                  <label>broadcast network port</label>
-                  <md-input v-model="network.port"></md-input>
-                  <span class="md-helper-text">To use the default port (47808) leave this field empty</span>
-               </md-field>
+               <div class="content">
+                  <broadcast-template
+                     v-if="network.useBroadcast"
+                     :network="network"
+                  ></broadcast-template>
+
+                  <unicast-template
+                     v-else
+                     :network="network"
+                  ></unicast-template>
+
+               </div>
             </div>
 
          </md-step>
@@ -42,13 +58,19 @@
             md-label="Discover network"
             md-description="Discover"
          >
-            <discover-table
-               :devices="devices"
-               :state="state"
-               :selected="selected"
-               @discover="discover"
-               @select="selectDevice"
-            ></discover-table>
+
+            <div class="stepContainer">
+               <discover-table
+                  :devices="devices"
+                  :state="state"
+                  :selected="selected"
+                  :network="network"
+                  @discover="discover"
+                  @select="selectDevice"
+                  @stop="stopDiscovering"
+               ></discover-table>
+            </div>
+
             <!-- <md-button @click="discover">Discover</md-button>
              -->
 
@@ -59,24 +81,25 @@
             md-label="Create network"
             md-description="Create"
          >
+            <div class="stepContainer">
+               <div class="loading">
+                  <md-progress-spinner
+                     v-if="state === STATES.creating"
+                     md-mode="indeterminate"
+                  ></md-progress-spinner>
 
-            <div>
-               <md-progress-spinner
-                  v-if="state === STATES.creating"
-                  md-mode="indeterminate"
-               ></md-progress-spinner>
+                  <md-icon
+                     v-else-if="state === STATES.created"
+                     class="md-size-5x"
+                  >check</md-icon>
 
-               <md-icon
-                  v-else-if="state === STATES.created"
-                  class="md-size-5x"
-               >check</md-icon>
+                  <md-button
+                     v-else
+                     :disabled="selected.length === 0"
+                     @click="createNodes"
+                  >Create Network</md-button>
 
-               <md-button
-                  v-else
-                  :disabled="selected.length === 0"
-                  @click="createNodes"
-               >Create Network</md-button>
-
+               </div>
             </div>
 
          </md-step>
@@ -93,11 +116,15 @@ import discoverTable from "../components/discoverTable.vue";
 
 import { STATES, SpinalDisoverModel } from "spinal-model-bacnet";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
+import BroadcastTemplate from "../components/broadcastTemplate.vue";
+import UnicastTemplate from "../components/unicastTemplate.vue";
 
 export default {
    name: "discoverNetworkPanel",
    components: {
       "discover-table": discoverTable,
+      "broadcast-template": BroadcastTemplate,
+      "unicast-template": UnicastTemplate,
    },
    data() {
       this.STATES = STATES;
@@ -112,10 +139,12 @@ export default {
          devices: [],
          selected: [],
          network: {
+            useBroadcast: true,
             address: "255.255.255.255",
             port: 47808,
             name: "",
             type: NETWORK_TYPE,
+            ips: [{ id: 0, address: "", deviceId: "" }],
          },
       };
    },
@@ -142,11 +171,8 @@ export default {
             console.log(this.spinalDiscover);
 
             await this.spinalDiscover.addToGraph();
-            // await this.addToGraph();
          }
 
-         this.spinalDiscover.network.name.set(this.network.name);
-         // this.spinalDiscover.state.set(STATES.discovering);
          this.spinalDiscover.setDiscoveringMode();
          this.getDevicesFound();
       },
@@ -159,9 +185,6 @@ export default {
       },
 
       getDevicesFound() {
-         // this.devicesBindProcess = this.graph.info.discover.devices.bind(() => {
-         //    this.devices = this.graph.info.discover.devices.get();
-         // });
          this.devicesBindProcess = this.spinalDiscover.state.bind(() => {
             switch (this.spinalDiscover.state.get()) {
                case STATES.discovered:
@@ -185,6 +208,13 @@ export default {
                case STATES.created:
                   console.log("created...");
                   this.state = STATES.created;
+                  break;
+               case STATES.error:
+                  console.log("error...");
+                  this.state = STATES.error;
+               case STATES.reseted:
+                  console.log("reset...");
+                  this.state = STATES.reseted;
                   break;
 
                default:
@@ -231,23 +261,33 @@ export default {
          this.selected = devices;
       },
 
-      // async addToGraph() {
-      //    if (!this.graph.info.discover) {
-      //       const x = new Lst();
-      //       x.push(this.spinalDiscover);
-      //       this.graph.info.add_attr({
-      //          discover: new Ptr(x),
-      //       });
-      //       Promise.resolve(true);
-      //    } else {
-      //       return new Promise((resolve, reject) => {
-      //          this.graph.info.discover.load((list) => {
-      //             list.push(this.spinalDiscover);
-      //             resolve(true);
-      //          });
-      //       });
-      //    }
-      // },
+      stopDiscovering() {
+         if (this.spinalDiscover) {
+            this.spinalDiscover.setResetedMode();
+            this.spinalDiscover.remove().then((result) => {
+               this.spinalDiscover = undefined;
+            });
+         } else {
+            this.state = STATES.reseted;
+         }
+      },
+   },
+   watch: {
+      "network.useBroadcast": function () {
+         this.stopDiscovering();
+      },
+      "network.address": function () {
+         this.stopDiscovering();
+      },
+      "network.port": function () {
+         this.stopDiscovering();
+      },
+      "network.name": function () {
+         this.stopDiscovering();
+      },
+      "network.ips": function () {
+         this.stopDiscovering();
+      },
    },
    beforeDestroy() {
       this.spinalDiscover.remove(this.graph);
@@ -257,7 +297,71 @@ export default {
 
 
 <style scoped>
-.contextInput {
-   min-height: unset;
+.discover_container {
+   width: 100%;
+   height: calc(100% - 15px);
+}
+
+.discover_container .stepContainer {
+   width: 100%;
+   height: 350px;
+}
+
+.discover_container .loading {
+   width: 100%;
+   height: 100%;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+}
+
+.discover_container .header {
+   width: 100%;
+   height: 50px;
+   display: flex;
+   justify-content: space-between;
+}
+
+.discover_container .header .radio {
+   width: 50%;
+   height: 100%;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+}
+
+.discover_container .header .radio.isActive {
+   color: #448aff;
+   border-bottom: 2px solid #448aff;
+}
+
+.discover_container .content {
+   width: 100%;
+   height: calc(100% - 50px);
+   margin-top: 10px;
+   /* min-height: 200px; */
+
+   /* overflow: hidden;
+   overflow-y: auto; */
+}
+</style>
+
+<style>
+.discover_container .md-steppers.md-theme-default,
+.discover_container .md-steppers.md-theme-default .md-steppers-wrapper,
+.discover_container
+   .md-steppers.md-theme-default
+   .md-steppers-wrapper
+   .md-steppers-container {
+   height: 100%;
+}
+
+.discover_container
+   .md-steppers.md-theme-default
+   .md-steppers-wrapper
+   .md-steppers-container
+   .md-stepper-content.md-active {
+   min-height: 250px;
+   max-height: 350px;
 }
 </style>

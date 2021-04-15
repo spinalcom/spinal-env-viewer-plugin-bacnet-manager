@@ -4,6 +4,8 @@ import StartBtn from "./resume";
 import StopBtn from "./stop";
 import EditTimeIntervalBtn from "./editTimeInterval";
 import AddOrganBtn from "./addOrgan";
+import LinkProfilToBmsDevice from "./linkProfil";
+
 
 export {
    discoverNetworkBtn,
@@ -11,5 +13,6 @@ export {
    StartBtn,
    StopBtn,
    EditTimeIntervalBtn,
-   AddOrganBtn
+   AddOrganBtn,
+   LinkProfilToBmsDevice
 }

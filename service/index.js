@@ -1,6 +1,7 @@
 import { spinalCore, FileSystem } from "spinal-core-connectorjs_type";
 import { SpinalGraphService, SPINAL_RELATION_PTR_LST_TYPE } from "spinal-env-viewer-graph-service";
 import { SpinalOrganConfigModel } from "spinal-model-bacnet";
+import { SpinalBmsEndpoint } from "spinal-model-bmsnetwork";
 
 export class SpinalBacnetPluginService {
    constructor() { }
@@ -71,6 +72,71 @@ export class SpinalBacnetPluginService {
    static getFileModel(file) {
       return new Promise((resolve, reject) => {
          file.load(x => resolve(x));
+      });
+   }
+
+
+
+   /**
+    * Listen Model
+    */
+
+
+
+   /**
+    * Link Profil to BMS Device
+    */
+
+   static linkProfilToDevice(bmsContextId, bmsDeviceId, profilId) {
+      return Promise.all(this.getEndpointsMap(bmsContextId, bmsDeviceId), this.getProfilItemsMap(profilId)).then((result) => {
+         console.log(result)
+      })
+   }
+
+   static getEndpointsMap(bmsContextId, bmsDeviceId) {
+
+      return SpinalGraphService.findInContext(bmsDeviceId, bmsContextId, (node) => {
+         if (node.getType().get() === SpinalBmsEndpoint.nodeTypeName) {
+            SpinalGraphService._addNode(node)
+            return true;
+         }
+         return false;
+      }).then((nodes) => {
+         const bmsDeviceMap = new Map();
+
+         const promises = nodes.map(async el => {
+            // const realNode = SpinalGraphService.getRealNode(el.id.get());
+            // const element = await realNode.getElement();
+            // const networkId = element.get()
+            // _temp.nodeId = el.id.get();
+            // bmsDeviceMap.set(_temp.id, _temp);
+            // return _temp;
+            bmsDeviceMap.set(el.idNetwork.get(), el);
+         })
+
+         return Promise.all(promises).then(() => {
+            return bmsDeviceMap;
+         })
+      })
+   }
+
+   static getProfilItemsMap(profilId) {
+      return this.getItemsList(profilId).then((items) => {
+         console.log(items);
+      })
+   }
+
+
+   static getItemsList(virtualDeviceId) {
+      const ITEM_LIST_RELATION = "hasItemList";
+
+      return SpinalGraphService.getChildren(virtualDeviceId, [ITEM_LIST_RELATION]).then((itemList) => {
+         const promises = itemList.map(el => SpinalGraphService.getChildren(el.id.get(), [this.ITEM_LIST_TO_ITEMS_RELATION]));
+         return Promise.all(promises).then((items) => {
+            return items.flat().map(el => el.get())
+         })
+      }).catch((err) => {
+         return []
       });
    }
 

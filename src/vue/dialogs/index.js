@@ -3,6 +3,7 @@ import Vue from "vue";
 import CreateGTBNetworkContextDialog from "./createContext.vue";
 import ModifyTimeIntervalDialog from "./modifyTimeInterval.vue";
 import AddOrganDialog from "./addOrgan.vue";
+import LinkProfilToBmsDeviceDialog from "./linkToProfilDialog.vue";
 
 const { SpinalMountExtention } = require("spinal-env-viewer-panel-manager-service");
 
@@ -21,6 +22,11 @@ const dialogs = [{
 {
    name: "addOrganDialogDialog",
    vueMountComponent: Vue.extend(AddOrganDialog),
+   parentContainer: document.body
+},
+{
+   name: "linkProfilToBmsDeviceDialog",
+   vueMountComponent: Vue.extend(LinkProfilToBmsDeviceDialog),
    parentContainer: document.body
 }
 ]

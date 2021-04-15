@@ -28,7 +28,7 @@
    </md-table>
 
    <div
-      class="_container"
+      class="discover_container"
       v-else
    >
 
@@ -46,10 +46,22 @@
             @click="discover"
          >Retry</md-button>
 
-         <md-progress-spinner
+         <div
+            class="loading"
             v-else-if="show === STATES.discovering"
-            md-mode="indeterminate"
-         ></md-progress-spinner>
+         >
+            <div>
+               <md-progress-spinner md-mode="indeterminate"></md-progress-spinner>
+            </div>
+            <div>
+               <md-button
+                  class="md-accent md-raised"
+                  @click="stop"
+               >Stop</md-button>
+            </div>
+
+         </div>
+
       </div>
 
    </div>
@@ -63,6 +75,7 @@ export default {
       devices: {},
       state: {},
       selected: {},
+      network: {},
    },
    data() {
       this.STATES = STATES;
@@ -72,6 +85,8 @@ export default {
       };
    },
    methods: {
+      disabledBtn() {},
+
       onSelect(items) {
          this.$emit("select", items);
       },
@@ -80,49 +95,9 @@ export default {
          this.$emit("discover");
       },
 
-      // retry() {
-      //    this.$emit("retry");
-      // },
-
-      // getLabel() {
-      //    switch (this.state) {
-      //       case STATES.reseted:
-      //          return "Discover network to find devices";
-      //       case STATES.timeout:
-      //          return "Discover Timeout, retry";
-      //       case STATES.discovering:
-      //          return "Discovering";
-
-      //       // case STATES.reseted:
-      //       //    return "Discover network to find devices";
-
-      //       default:
-      //          return "hello world";
-      //    }
-      // },
-
-      //////////////////////////////////////////////////////////
-      ///
-      //////////////////////////////////////////////////////////
-
-      // reseted() {
-      //    return this.state === STATES.reseted;
-      // },
-      // discovering() {
-      //    return this.state === STATES.discovering;
-      // },
-      // discovered() {
-      //    return this.state === STATES.discovered;
-      // },
-      // timeout() {
-      //    return this.state === STATES.timeout;
-      // },
-      // creating() {
-      //    return this.state === STATES.creating;
-      // },
-      // created() {
-      //    return this.state === STATES.created;
-      // },
+      stop() {
+         this.$emit("stop");
+      },
    },
    watch: {
       state() {
@@ -137,16 +112,47 @@ export default {
             case STATES.timeout:
                this.label = "Timeout, no device found !";
                break;
-
+            case STATES.error:
+               this.label = "oups !";
+               break;
             default:
                break;
          }
 
          // this.$forceUpdate();
       },
+      // "network.useBroadcast": function () {
+      //    this.disabledBtn();
+      // },
+      // "network.address": function () {
+      //    this.disabledBtn();
+      // },
+      // "network.port": function () {
+      //    this.disabledBtn();
+      // },
+      // "network.name": function () {
+      //    this.disabledBtn();
+      // },
+      // "network.ips": function () {
+      //    this.disabledBtn();
+      // },
    },
 };
 </script>
 
-<style>
+<style scoped>
+.discover_container {
+   width: 100%;
+   height: 100%;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+}
+
+.discover_container .loading {
+   text-align: center;
+   /* display: flex;
+   flex-direction: column; */
+}
 </style>
