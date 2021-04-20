@@ -1,13 +1,11 @@
 <template>
    <md-table
       v-model="devices"
-      md-card
+      class="devices_table"
       @md-selected="onSelect"
       v-if="show === STATES.discovered"
    >
-      <!-- <md-table-toolbar>
-         <h1 class="md-title">With auto select and alternate headers</h1>
-      </md-table-toolbar> -->
+      <!-- md-fixed-header -->
 
       <md-table-row
          slot="md-table-row"
@@ -23,6 +21,18 @@
          <md-table-cell md-label="deviceId">{{ item.deviceId }}</md-table-cell>
 
          <md-table-cell md-label="address">{{ item.address }}</md-table-cell>
+
+         <!-- <md-table-cell
+            class="configureMonitoring"
+            md-label="configure Monitoring"
+         >
+            <md-button
+               class="md-icon-button md-primary"
+               v-tooltip="'Configure Monitoring'"
+            >
+               <md-icon>settings</md-icon>
+            </md-button>
+         </md-table-cell> -->
 
       </md-table-row>
    </md-table>
@@ -154,5 +164,25 @@ export default {
    text-align: center;
    /* display: flex;
    flex-direction: column; */
+}
+
+.discover_container .devices_table {
+   width: 98%;
+   height: 100%;
+   margin: auto;
+   overflow: hidden;
+   background: red;
+}
+</style>
+
+<style>
+/* .discover_container .devices_table .md-table.md-theme-default .md-table-content,
+.md-table.md-theme-default .md-table-alternate-header .md-table table {
+   width: 100%;
+   height: 100%;
+} */
+
+.configureMonitoring .md-button .md-ripple {
+   padding: 0;
 }
 </style>
