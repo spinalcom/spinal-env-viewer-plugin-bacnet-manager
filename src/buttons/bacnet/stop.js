@@ -1,6 +1,6 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
-import { SpinalBmsDevice } from "spinal-model-bmsnetwork";
+import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 
@@ -20,16 +20,38 @@ class StopBtn extends SpinalContextApp {
       );
    }
 
-   isShown(option) {
+   async isShown(option) {
       const type = option.selectedNode.type.get();
-      return Promise.resolve(type === SpinalBmsDevice.nodeTypeName ? true : -1);
+
+      if (type === SpinalBmsNetwork.nodeTypeName) return true;
+
+      if (type === SpinalBmsDevice.nodeTypeName) {
+         if (!option.selectedNode.listener) return -1;
+
+         const realNode = SpinalGraphService.getRealNode(option.selectedNode.id.get());
+         const model = await getModel(realNode);
+         return model.listen.get() ? true : -1;
+      }
+
+      return -1;
    }
 
    async action(option) {
       const id = option.selectedNode.id.get();
-      const realNode = SpinalGraphService.getRealNode(id);
-      const model = await getModel(realNode);
-      if (model != -1) model.listen.set(false);
+      const contextId = option.context.id.get();
+      const bmsDevices = await getBmsDevices(contextId, id);
+
+      const promises = bmsDevices.map(el => {
+         const realNode = SpinalGraphService.getRealNode(el.id.get());
+         return getModel(realNode);
+      })
+
+
+      await Promise.all(promises).then((models) => {
+         for (const model of models) {
+            if (model != -1) model.listen.set(false);
+         }
+      })
    }
 
 }
@@ -43,6 +65,20 @@ const getModel = (realNode) => {
    } else {
       return Promise.resolve(-1);
    }
+}
+
+const getBmsDevices = async (contextId, id) => {
+   const info = SpinalGraphService.getInfo(id);
+   if (info.type.get() === SpinalBmsDevice.nodeTypeName) {
+      return [info];
+   }
+   return SpinalGraphService.findInContext(id, contextId, (node) => {
+      if (node.getType().get() === SpinalBmsDevice.nodeTypeName) {
+         SpinalGraphService._addNode(node);
+         return true;
+      }
+      return false;
+   })
 }
 
 const stopBtn = new StopBtn()

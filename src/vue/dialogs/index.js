@@ -4,9 +4,10 @@ import CreateGTBNetworkContextDialog from "./createContext.vue";
 import ModifyTimeIntervalDialog from "./modifyTimeInterval.vue";
 import AddOrganDialog from "./addOrgan.vue";
 import LinkProfilToBmsDeviceDialog from "./linkToProfilDialog.vue";
+import LinkToBimAutomateDialog from "./linkToBimAutomate.vue";
+import GetBacnetValueDialog from "./getBacnetValue.vue";
 
 const { SpinalMountExtention } = require("spinal-env-viewer-panel-manager-service");
-
 
 
 const dialogs = [{
@@ -27,6 +28,16 @@ const dialogs = [{
 {
    name: "linkProfilToBmsDeviceDialog",
    vueMountComponent: Vue.extend(LinkProfilToBmsDeviceDialog),
+   parentContainer: document.body
+},
+{
+   name: "linkToBimAutomateDialog",
+   vueMountComponent: Vue.extend(LinkToBimAutomateDialog),
+   parentContainer: document.body
+},
+{
+   name: "getBacnetValueDialog",
+   vueMountComponent: Vue.extend(GetBacnetValueDialog),
    parentContainer: document.body
 }
 ]

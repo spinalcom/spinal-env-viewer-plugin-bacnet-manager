@@ -21,46 +21,85 @@ class Start extends SpinalContextApp {
       );
    }
 
-   isShown(option) {
+   async isShown(option) {
       const type = option.selectedNode.type.get();
-      return Promise.resolve(type === SpinalBmsDevice.nodeTypeName ? true : -1);
+
+      if (type === SpinalBmsNetwork.nodeTypeName || type === SpinalBmsDevice.nodeTypeName)
+         return Promise.resolve(true);
+
+      return Promise.resolve(-1);
    }
 
    async action(option) {
       const id = option.selectedNode.id.get();
       const contextId = option.context.id.get();
-
-      const context = SpinalGraphService.getRealNode(contextId);
-      const selectedNode = SpinalGraphService.getRealNode(id);
-
-      const model = await getModel(selectedNode);
-      const monitor = await getMonitoringInfo(id, contextId);
+      const bmsDevices = await getBmsDevices(contextId, id);
 
 
+      const promises = bmsDevices.map(async el => {
+         const realNode = SpinalGraphService.getRealNode(el.id.get());
+         const model = await getModel(realNode);
+         const monitor = await getMonitoringInfo(el.id.get(), contextId);
 
-      if (model != -1) {
-         model.monitor.set(monitor)
-         model.listen.set(true);
-      } else {
-         const graph = SpinalGraphService.getRealNode(option.graph.getId().get());
+         if (model != -1) {
+            model.monitor.set(monitor)
+            model.listen.set(true);
+            return;
+         }
 
-         // spinalPanelManagerService.openPanel("modifyTimeIntervalDialog", {
-         //    callback: async (val) => {
-         const network = await getNetwork(id, contextId);
+         const network = await getNetwork(el.id.get(), contextId);
          const organ = await getOrgan(network.getId().get(), contextId);
 
-         const spinalListener = new SpinalListenerModel(graph, context, network, selectedNode, organ, monitor);
+         const spinalListener = new SpinalListenerModel(option.graph, context, network, selectedNode, organ, monitor);
          selectedNode.info.add_attr({
             listener: new Ptr(spinalListener)
          })
-         // }
-         // })
 
-      }
+         return;
+
+      })
+
+      await Promise.all(promises);
+
+      // const context = SpinalGraphService.getRealNode(contextId);
+      // const selectedNode = SpinalGraphService.getRealNode(id);
+      // const model = await getModel(selectedNode);
+      // const monitor = await getMonitoringInfo(id, contextId);
+
+
+
+      // if (model != -1) {
+      //    model.monitor.set(monitor)
+      //    model.listen.set(true);
+      // } else {
+      //    const graph = SpinalGraphService.getRealNode(option.graph.getId().get());
+
+      //    const network = await getNetwork(id, contextId);
+      //    const organ = await getOrgan(network.getId().get(), contextId);
+
+      //    const spinalListener = new SpinalListenerModel(graph, context, network, selectedNode, organ, monitor);
+      //    selectedNode.info.add_attr({
+      //       listener: new Ptr(spinalListener)
+      //    })
+      // }
    }
 
 }
 
+
+const getBmsDevices = async (contextId, id) => {
+   const info = SpinalGraphService.getInfo(id);
+   if (info.type.get() === SpinalBmsDevice.nodeTypeName) {
+      return [info];
+   }
+   return SpinalGraphService.findInContext(id, contextId, (node) => {
+      if (node.getType().get() === SpinalBmsDevice.nodeTypeName) {
+         SpinalGraphService._addNode(node);
+         return true;
+      }
+      return false;
+   })
+}
 
 const getModel = (realNode) => {
    if (realNode.info.listener) {
@@ -78,21 +117,7 @@ const getNetwork = async (id, contextId) => {
       const found = parents.find(el => el.contextIds[contextId]);
 
       return found;
-      // if (found) {
-      //    return found;
-      // }
-
-      // return;
-
    })
-   // const networks = await SpinalGraphService.getChildrenInContext(contextId, contextId);
-   // for (const network of networks) {
-   //    const element = network.get();
-   //    const childrenIds = SpinalGraphService.getChildrenIds(element.id);
-   //    if (childrenIds.indexOf(id) !== -1) return element;
-   // }
-
-   // return;
 }
 
 const getOrgan = (networkId, contextId) => {
@@ -112,10 +137,13 @@ const getOrgan = (networkId, contextId) => {
 
 const getMonitoringInfo = async (deviceId, contextId) => {
    const profilContext = SpinalGraphService.getContextWithType("deviceProfileContext")[0];
+
    const profils = await SpinalGraphService.getChildren(deviceId, ["hasBacnetProfile"]);
    const profil = profils[0];
 
    if (profilContext && profil) {
+      SpinalGraphService._addNode(profilContext);
+
       const intervalsNodes = await SpinalGraphService.findInContext(profil.id.get(), profilContext.getId().get(), (node) => {
          if (node.getType().get() === "deviceMonitoringIntervalTime") {
             SpinalGraphService._addNode(node);
@@ -141,7 +169,7 @@ const getMonitoringInfo = async (deviceId, contextId) => {
       })
 
    } else {
-      console.log("no no no");
+      console.log("no item found");
    }
 
    // return SpinalGraphService.findInContextByType(deviceId, contextId, SpinalBmsEndpoint.nodeTypeName).then((endpoints) => {
@@ -153,20 +181,6 @@ const getMonitoringInfo = async (deviceId, contextId) => {
    //    })
    // })
 }
-
-// const getBmsNetworkElement = (node) => {
-//    const realNode = SpinalGraphService.getRealNode(node.id.get());
-//    return realNode.getElement();
-// }
-
-// const getTimeInterval = async (node) => {
-//    const realNode = SpinalGraphService.getRealNode(node.id.get());
-//    const children = await realNode.getChildren("hasBmsProfil");
-//    if (children.length > 0) {
-//       const profilItem = children[0];
-//    }
-// }
-
 
 const getSharedAttribute = async (intervalNode) => {
    const realNode = SpinalGraphService.getRealNode(intervalNode.id.get());
@@ -196,8 +210,6 @@ const getEndpointsObjectIds = async (intervalNode, profilContextId, bmsContextId
       return result.flat();
    })
 }
-
-
 
 
 const start = new Start()
