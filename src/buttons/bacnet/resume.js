@@ -5,6 +5,8 @@ const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-s
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 
+const bacnet = require('bacstack');
+
 const SIDEBAR = "GraphManagerSideBar";
 
 
@@ -40,6 +42,8 @@ class Start extends SpinalContextApp {
          const realNode = SpinalGraphService.getRealNode(el.id.get());
          const model = await getModel(realNode);
          const monitor = await getMonitoringInfo(el.id.get(), contextId);
+
+         if (!monitor) return;
 
          if (model != -1) {
             model.monitor.set(monitor)
@@ -199,27 +203,34 @@ const getEndpointsObjectIds = async (intervalNode, profilContextId, bmsContextId
    const nodeId = intervalNode.id.get();
    const profilItems = await SpinalGraphService.getChildrenInContext(nodeId, profilContextId);
    const promises = profilItems.map(async profilItem => {
-      // const children = await SpinalGraphService.getParents(profilItem.id.get(), [SpinalBmsEndpoint.relationName]);
-      const parents = await SpinalGraphService.getParents(profilItem.id.get(), ["hasBacnetItem"]);
-      const children = parents.map(el => SpinalGraphService.getInfo(el.id.get()));
+      console.log("profilItem", profilItem);
+      return { instance: parseInt(profilItem.IDX.get()) + 1, type: _getBacnetObjectType(profilItem.type.get()) }
+      // // const children = await SpinalGraphService.getParents(profilItem.id.get(), [SpinalBmsEndpoint.relationName]);
+      // const parents = await SpinalGraphService.getParents(profilItem.id.get(), ["hasBacnetItem"]);
+      // const children = parents.map(el => SpinalGraphService.getInfo(el.id.get()));
 
-      const prom2 = children.filter(el => typeof el.contextIds[bmsContextId] !== "undefined").map(el => el.element.load());
-      return Promise.all(prom2).then((result) => {
-         const res = [];
-         result.map(el => ({ type: el.typeId.get(), instance: el.id.get() })).forEach(item => {
-            const i = res.findIndex(x => x.type === item.type && x.instance === item.instance);
-            if (i <= -1) {
-               res.push(item);
-            }
-         })
+      // const prom2 = children.filter(el => typeof el.contextIds[bmsContextId] !== "undefined").map(el => el.element.load());
+      // return Promise.all(prom2).then((result) => {
+      //    const res = [];
+      //    result.map(el => ({ type: el.typeId.get(), instance: el.id.get() })).forEach(item => {
+      //       const i = res.findIndex(x => x.type === item.type && x.instance === item.instance);
+      //       if (i <= -1) {
+      //          res.push(item);
+      //       }
+      //    })
 
-         return res;
-      })
+      //    return res;
+      // })
    });
 
    return Promise.all(promises).then((result) => {
       return result.flat();
    })
+}
+
+const _getBacnetObjectType = (type) => {
+   const objectName = ("object_" + type.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)).toUpperCase();
+   return bacnet.enum.ObjectTypes[objectName];
 }
 
 const start = new Start()

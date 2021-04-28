@@ -151,16 +151,16 @@ export default {
             const modelProcess = model.state.bind(() => {
                if (model.state.get() === "success") {
                   model.state.unbind(modelProcess);
-                  model.remToNode().then(() => {
-                     // this.pageSelected = this.PAGES.success;
-                     this.createValue(iterator, iterator.next(), sensors);
-                  });
+                  // model.remToNode().then(() => {
+                  // this.pageSelected = this.PAGES.success;
+                  this.createValue(iterator, iterator.next(), sensors);
+                  // });
                } else if (model.state.get() === "error") {
                   model.state.unbind(modelProcess);
-                  model.remToNode().then(() => {
-                     // this.pageSelected = this.PAGES.error;
-                     this.createValue(iterator, iterator.next(), sensors);
-                  });
+                  // model.remToNode().then(() => {
+                  // this.pageSelected = this.PAGES.error;
+                  this.createValue(iterator, iterator.next(), sensors);
+                  // });
                }
             });
          } else {
