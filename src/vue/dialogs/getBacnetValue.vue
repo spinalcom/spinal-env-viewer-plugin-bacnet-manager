@@ -82,10 +82,10 @@ export default {
       };
 
       return {
-         sensor_types: SENSOR_TYPES,
+         sensor_types: Object.assign([], SENSOR_TYPES),
          pageSelected: this.PAGES.selection,
          showDialog: true,
-         node: undefined,
+         nodes: undefined,
          context: undefined,
          graph: undefined,
          network: undefined,
@@ -95,10 +95,19 @@ export default {
       async opened(option) {
          this.pageSelected = this.PAGES.loading;
 
-         this.node = SpinalGraphService.getRealNode(option.nodeId);
+         this.nodes = option.devices.map((el) =>
+            SpinalGraphService.getRealNode(el.id.get())
+         );
          this.context = SpinalGraphService.getRealNode(option.contextId);
          this.graph = option.graph;
-         this.network = await this._getNetwork(option.contextId, option.nodeId);
+         if (option.networkId) {
+            this.network = SpinalGraphService.getRealNode(option.networkId);
+         } else {
+            this.network = await this._getNetwork(
+               option.contextId,
+               option.nodeId
+            );
+         }
 
          this.pageSelected = this.PAGES.selection;
       },
@@ -124,27 +133,39 @@ export default {
             .filter((el) => el.checked)
             .map((el) => el.value);
 
-         const model = new SpinalBacnetValueModel(
-            this.graph,
-            this.context,
-            this.network,
-            this.node,
-            sensors
-         );
-         model.addToNode();
-         const modelProcess = model.state.bind(() => {
-            if (model.state.get() === "success") {
-               model.state.unbind(modelProcess);
-               model.remToNode().then(() => {
-                  this.pageSelected = this.PAGES.success;
-               });
-            } else if (model.state.get() === "error") {
-               model.state.unbind(modelProcess);
-               model.remToNode().then(() => {
-                  this.pageSelected = this.PAGES.error;
-               });
-            }
-         });
+         const iterator = this.convertListToIterator(this.nodes);
+
+         this.createValue(iterator, iterator.next(), sensors);
+      },
+
+      createValue(iterator, next, sensors) {
+         if (!next.done) {
+            const model = new SpinalBacnetValueModel(
+               this.graph,
+               this.context,
+               this.network,
+               next.value,
+               sensors
+            );
+            model.addToNode();
+            const modelProcess = model.state.bind(() => {
+               if (model.state.get() === "success") {
+                  model.state.unbind(modelProcess);
+                  model.remToNode().then(() => {
+                     // this.pageSelected = this.PAGES.success;
+                     this.createValue(iterator, iterator.next(), sensors);
+                  });
+               } else if (model.state.get() === "error") {
+                  model.state.unbind(modelProcess);
+                  model.remToNode().then(() => {
+                     // this.pageSelected = this.PAGES.error;
+                     this.createValue(iterator, iterator.next(), sensors);
+                  });
+               }
+            });
+         } else {
+            this.pageSelected = this.PAGES.success;
+         }
       },
 
       closeDialog(closeResult) {
@@ -181,6 +202,10 @@ export default {
             SpinalGraphService._addNode(found);
             return found.getId().get();
          }
+      },
+
+      *convertListToIterator(devices) {
+         yield* devices;
       },
    },
 };

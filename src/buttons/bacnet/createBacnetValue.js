@@ -2,6 +2,7 @@ import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-co
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
+import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 
 
 const SIDEBAR = "GraphManagerSideBar";
@@ -22,23 +23,51 @@ class CreateBacnetValue extends SpinalContextApp {
 
    isShown(option) {
       const type = option.selectedNode.type.get();
-      return Promise.resolve(type === SpinalBmsDevice.nodeTypeName ? true : -1);
+      return Promise.resolve(type === SpinalBmsNetwork.nodeTypeName || type === SpinalBmsDevice.nodeTypeName ? true : -1);
    }
 
    async action(option) {
 
-      const nodeId = option.selectedNode.id.get()
-      const contextId = option.context.id.get()
+      const id = option.selectedNode.id.get();
+      const contextId = option.context.id.get();
+      const type = option.selectedNode.type.get();
+      let devices;
+      let networkId;
+      let nodeId;
+
+      if (type === SpinalBmsNetwork.nodeTypeName) {
+         networkId = id;
+         devices = await getBmsDevices(contextId, id);
+      } else {
+         nodeId = id;
+         devices = [option.selectedNode]
+      }
+
+
 
       spinalPanelManagerService.openPanel("getBacnetValueDialog", {
+         networkId,
          nodeId,
+         devices,
          contextId,
          graph: option.graph
       })
    }
 }
 
-
+const getBmsDevices = async (contextId, id) => {
+   const info = SpinalGraphService.getInfo(id);
+   if (info.type.get() === SpinalBmsDevice.nodeTypeName) {
+      return [info];
+   }
+   return SpinalGraphService.findInContext(id, contextId, (node) => {
+      if (node.getType().get() === SpinalBmsDevice.nodeTypeName) {
+         SpinalGraphService._addNode(node);
+         return true;
+      }
+      return false;
+   })
+}
 
 
 const createBacnetValue = new CreateBacnetValue()

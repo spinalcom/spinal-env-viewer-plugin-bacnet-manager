@@ -49,9 +49,10 @@ class Start extends SpinalContextApp {
 
          const network = await getNetwork(el.id.get(), contextId);
          const organ = await getOrgan(network.getId().get(), contextId);
+         const context = SpinalGraphService.getRealNode(contextId);
 
-         const spinalListener = new SpinalListenerModel(option.graph, context, network, selectedNode, organ, monitor);
-         selectedNode.info.add_attr({
+         const spinalListener = new SpinalListenerModel(option.graph, context, network, realNode, organ, monitor);
+         realNode.info.add_attr({
             listener: new Ptr(spinalListener)
          })
 
@@ -134,7 +135,6 @@ const getOrgan = (networkId, contextId) => {
    })
 }
 
-
 const getMonitoringInfo = async (deviceId, contextId) => {
    const profilContext = SpinalGraphService.getContextWithType("deviceProfileContext")[0];
 
@@ -199,10 +199,21 @@ const getEndpointsObjectIds = async (intervalNode, profilContextId, bmsContextId
    const nodeId = intervalNode.id.get();
    const profilItems = await SpinalGraphService.getChildrenInContext(nodeId, profilContextId);
    const promises = profilItems.map(async profilItem => {
-      const children = await SpinalGraphService.getChildren(profilItem.id.get(), [SpinalBmsEndpoint.relationName]);
+      // const children = await SpinalGraphService.getParents(profilItem.id.get(), [SpinalBmsEndpoint.relationName]);
+      const parents = await SpinalGraphService.getParents(profilItem.id.get(), ["hasBacnetItem"]);
+      const children = parents.map(el => SpinalGraphService.getInfo(el.id.get()));
+
       const prom2 = children.filter(el => typeof el.contextIds[bmsContextId] !== "undefined").map(el => el.element.load());
       return Promise.all(prom2).then((result) => {
-         return result.map(el => ({ type: el.typeId.get(), instance: el.id.get() }))
+         const res = [];
+         result.map(el => ({ type: el.typeId.get(), instance: el.id.get() })).forEach(item => {
+            const i = res.findIndex(x => x.type === item.type && x.instance === item.instance);
+            if (i <= -1) {
+               res.push(item);
+            }
+         })
+
+         return res;
       })
    });
 
@@ -210,7 +221,6 @@ const getEndpointsObjectIds = async (intervalNode, profilContextId, bmsContextId
       return result.flat();
    })
 }
-
 
 const start = new Start()
 
