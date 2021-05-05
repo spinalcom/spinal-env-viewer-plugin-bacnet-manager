@@ -214,8 +214,8 @@ export default {
 
 <style scoped>
 .mdDialogContainer {
-   width: 60%;
-   height: 600px;
+   width: 700px;
+   height: 500px;
 }
 
 .mdDialogContainer .dialogTitle {

@@ -3,6 +3,7 @@ import startBtn from "./bacnet/resume";
 import stopBtn from "./bacnet/stop";
 // import editTimeIntervalBtn from "./bacnet/editTimeInterval";
 import createBacnetValue from "./bacnet/createBacnetValue";
+import locateBimObject from "./bacnet/locateBimObject";
 
 import createNetworkContext from "./viewer/createNetworkContext";
 import addOrganBtn from "./viewer/addOrgan";
@@ -18,5 +19,6 @@ export {
    addOrganBtn,
    // linkProfilToBmsDevice,
    createBacnetValue,
-   linkDeviceToBim
+   linkDeviceToBim,
+   locateBimObject
 }
