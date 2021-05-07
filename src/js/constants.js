@@ -5,6 +5,26 @@ const NETWORK_TYPE = 'GTBNetwork';
 const CONTEXT_TYPE = 'Network';
 
 
+const MESSAGES = {
+   wait: {
+      text: "waiting...",
+      id: "waiting",
+   },
+   recover: {
+      text: "recovering...",
+      id: "recover",
+   },
+   success: {
+      text: "success",
+      id: "success",
+   },
+   error: {
+      text: "fail",
+      id: "error",
+   },
+};
+
+
 const SENSOR_TYPES = [
    { name: "ANALOG INPUT", checked: true, value: ObjectTypes.OBJECT_ANALOG_INPUT, id: ObjectTypes.OBJECT_ANALOG_INPUT },
    { name: "ANALOG OUTPUT", checked: true, value: ObjectTypes.OBJECT_ANALOG_OUTPUT, id: ObjectTypes.OBJECT_ANALOG_OUTPUT },
@@ -21,5 +41,6 @@ const SENSOR_TYPES = [
 export {
    NETWORK_TYPE,
    CONTEXT_TYPE,
-   SENSOR_TYPES
+   SENSOR_TYPES,
+   MESSAGES
 }

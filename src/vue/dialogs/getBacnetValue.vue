@@ -26,21 +26,59 @@
          </div>
 
          <div
-            class="loading"
+            class="devicesProgress"
+            v-else-if="pageSelected === PAGES.creation"
+         >
+
+            <div
+               class="device"
+               v-for="device in nodes"
+               :key="device.id"
+            >
+               <div class="name">{{device.info.name}}</div>
+               <div
+                  class="progress-bar"
+                  v-if="device.progress != -1"
+               >
+                  <div class="progress-value">
+                     <md-progress-bar
+                        md-mode="buffer"
+                        :md-value="device.progress"
+                     ></md-progress-bar>
+                  </div>
+
+                  <div class="progress-number">{{device.progress}} %</div>
+               </div>
+
+               <div
+                  class="progress-bar"
+                  v-else
+               >
+                  <div
+                     class="message"
+                     :class="device.message.id"
+                  >{{device.message.text}}</div>
+               </div>
+            </div>
+
+         </div>
+
+         <div
+            class="state"
             v-else-if="pageSelected === PAGES.loading"
          >
             <md-progress-spinner md-mode="indeterminate"></md-progress-spinner>
          </div>
 
          <div
-            class="loading"
+            class="state"
             v-else-if="pageSelected === PAGES.success"
          >
             <md-icon class="md-size-5x">done</md-icon>
          </div>
 
          <div
-            class="loading"
+            class="state"
             v-else-if="pageSelected === PAGES.error"
          >
             <md-icon class="md-size-5x">error_outline</md-icon>
@@ -66,7 +104,7 @@
 
 <script>
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
-import { SENSOR_TYPES } from "../../js/constants";
+import { SENSOR_TYPES, MESSAGES } from "../../js/constants";
 import { SpinalBacnetValueModel } from "spinal-model-bacnet";
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 
@@ -77,13 +115,16 @@ export default {
       this.PAGES = {
          selection: 0,
          loading: 1,
-         success: 2,
-         error: 3,
+         creation: 2,
+         success: 3,
+         error: 4,
       };
+
+      this.MESSAGES = MESSAGES;
 
       return {
          sensor_types: Object.assign([], SENSOR_TYPES),
-         pageSelected: this.PAGES.selection,
+         pageSelected: this.PAGES.creation,
          showDialog: true,
          nodes: undefined,
          context: undefined,
@@ -94,12 +135,15 @@ export default {
    methods: {
       async opened(option) {
          this.pageSelected = this.PAGES.loading;
-
-         this.nodes = option.devices.map((el) =>
-            SpinalGraphService.getRealNode(el.id.get())
-         );
          this.context = SpinalGraphService.getRealNode(option.contextId);
          this.graph = option.graph;
+
+         this.nodes = option.devices.map((el) => ({
+            info: el.get(),
+            progress: -1,
+            message: this.MESSAGES.wait,
+         }));
+
          if (option.networkId) {
             this.network = SpinalGraphService.getRealNode(option.networkId);
          } else {
@@ -128,43 +172,75 @@ export default {
       },
 
       getBacnetValue() {
-         this.pageSelected = this.PAGES.loading;
+         this.pageSelected = this.PAGES.creation;
          const sensors = this.sensor_types
             .filter((el) => el.checked)
             .map((el) => el.value);
 
-         const iterator = this.convertListToIterator(this.nodes);
+         const iterator = [...this.nodes];
 
-         this.createValue(iterator, iterator.next(), sensors);
+         this.createValue(iterator, sensors);
       },
 
-      createValue(iterator, next, sensors) {
-         if (!next.done) {
+      createValue(iterator, sensors) {
+         console.log("inside createValue...");
+         const value = iterator.shift();
+
+         if (value && this.showDialog) {
+            // const value = next.value;
+            const realNode = SpinalGraphService.getRealNode(value.info.id);
+
             const model = new SpinalBacnetValueModel(
                this.graph,
                this.context,
                this.network,
-               next.value,
+               realNode,
                sensors
             );
             model.addToNode();
             const modelProcess = model.state.bind(() => {
-               if (model.state.get() === "success") {
-                  model.state.unbind(modelProcess);
-                  // model.remToNode().then(() => {
-                  // this.pageSelected = this.PAGES.success;
-                  this.createValue(iterator, iterator.next(), sensors);
-                  // });
-               } else if (model.state.get() === "error") {
-                  model.state.unbind(modelProcess);
-                  // model.remToNode().then(() => {
-                  // this.pageSelected = this.PAGES.error;
-                  this.createValue(iterator, iterator.next(), sensors);
-                  // });
+               switch (model.state.get()) {
+                  case "recover":
+                     console.log("recovering...");
+                     value.message = this.MESSAGES.recover;
+                     value.progress = -1;
+                     break;
+                  case "progress":
+                     console.log("progress...");
+                     model.progress.bind(() => {
+                        value.progress = model.progress.get();
+                     });
+                     break;
+                  case "success":
+                  case "error":
+                     console.log("success or error");
+                     model.state.unbind(modelProcess);
+                     value.message = this.MESSAGES[model.state.get()];
+                     value.progress = -1;
+
+                     this.createValue(iterator, sensors);
+                     break;
+
+                  default:
+                     break;
                }
+
+               // if (model.state.get() === "success") {
+               //    model.state.unbind(modelProcess);
+               //    value.message = this.MESSAGES.success;
+               //    value.progress = -1;
+
+               //    this.createValue(iterator, iterator.next(), sensors);
+               // } else if (model.state.get() === "error") {
+               //    model.state.unbind(modelProcess);
+               //    value.message = this.MESSAGES.error;
+               //    value.progress = -1;
+
+               //    this.createValue(iterator, iterator.next(), sensors);
+               // }
             });
          } else {
-            this.pageSelected = this.PAGES.success;
+            // this.pageSelected = this.PAGES.success;
          }
       },
 
@@ -214,7 +290,7 @@ export default {
 
 <style scoped>
 .mdDialogContainer {
-   width: 700px;
+   width: 750px;
    height: 500px;
 }
 
@@ -226,25 +302,107 @@ export default {
    padding: 0 10px 24px 24px;
 }
 
+.mdDialogContainer .content .devicesProgress {
+   width: 100%;
+   height: 100%;
+   display: flex;
+   flex-direction: column;
+   overflow: hidden;
+   overflow-y: auto;
+}
+
+.mdDialogContainer .content .devicesProgress .device {
+   width: 95%;
+   min-height: 50px;
+   display: flex;
+   justify-content: space-between;
+   padding: 0 5px;
+   align-items: center;
+   border-top: 1px solid grey;
+}
+
+.mdDialogContainer .content .devicesProgress .device .name {
+   width: 70%;
+   font-size: 1.2em;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}
+.mdDialogContainer .content .devicesProgress .device .progress-bar {
+   width: 30%;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.mdDialogContainer .content .devicesProgress .device .progress-bar .message {
+   text-align: center;
+}
+
+.mdDialogContainer
+   .content
+   .devicesProgress
+   .device
+   .progress-bar
+   .message.waiting {
+   color: grey;
+}
+.mdDialogContainer
+   .content
+   .devicesProgress
+   .device
+   .progress-bar
+   .message.success {
+   color: green;
+}
+.mdDialogContainer
+   .content
+   .devicesProgress
+   .device
+   .progress-bar
+   .message.error {
+   color: #ff5252;
+}
+
+.mdDialogContainer
+   .content
+   .devicesProgress
+   .device
+   .progress-bar
+   .progress-number {
+   width: 25%;
+   text-align: center;
+}
+
+.mdDialogContainer
+   .content
+   .devicesProgress
+   .device
+   .progress-bar
+   .progress-value {
+   width: 75%;
+}
+
 .mdDialogContainer .content .itemList {
    width: 100%;
    /* height: 100%; */
    display: flex;
-   justify-content: center;
-   align-items: flex-start;
+   justify-content: space-between;
+   /* align-items: flex-start; */
    flex-wrap: wrap;
    padding-top: 20px;
 }
 
 .mdDialogContainer .content .itemList .itemList-item {
-   width: 200px;
+   /* width: 200px; */
+   width: 33%;
    height: 50px;
    margin-bottom: 10px;
    display: flex;
    align-items: center;
 }
 
-.mdDialogContainer .content .loading {
+.mdDialogContainer .content .state {
    width: 100%;
    height: 100%;
    display: flex;

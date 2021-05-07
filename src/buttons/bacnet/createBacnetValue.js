@@ -3,6 +3,7 @@ import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
+import { SpinalOrganConfigModel } from "spinal-model-bacnet";
 
 
 const SIDEBAR = "GraphManagerSideBar";
@@ -36,14 +37,12 @@ class CreateBacnetValue extends SpinalContextApp {
       let nodeId;
 
       if (type === SpinalBmsNetwork.nodeTypeName) {
-         networkId = id;
+         networkId = await getNetworkId(id);
          devices = await getBmsDevices(contextId, id);
       } else {
          nodeId = id;
          devices = [option.selectedNode]
       }
-
-
 
       spinalPanelManagerService.openPanel("getBacnetValueDialog", {
          networkId,
@@ -69,6 +68,13 @@ const getBmsDevices = async (contextId, id) => {
    })
 }
 
+
+const getNetworkId = async (nodeId) => {
+   const parents = await SpinalGraphService.getParents(nodeId, [SpinalBmsNetwork.relationName]);
+   const organ = parents.find(el => el.type.get() === SpinalOrganConfigModel.TYPE);
+   console.log("organ", organ);
+   if (organ) return organ.id.get();
+}
 
 const createBacnetValue = new CreateBacnetValue()
 spinalContextMenuService.registerApp(SIDEBAR, createBacnetValue, [3]);
