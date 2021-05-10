@@ -220,7 +220,7 @@ export default {
                      value.message = this.MESSAGES[model.state.get()];
                      value.progress = -1;
 
-                     this.createValue(iterator, sensors);
+                     this.createValue(iterator, sensors, organ);
                      break;
 
                   default:
