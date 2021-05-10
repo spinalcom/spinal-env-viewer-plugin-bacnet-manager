@@ -171,18 +171,19 @@ export default {
          return true;
       },
 
-      getBacnetValue() {
+      async getBacnetValue() {
          this.pageSelected = this.PAGES.creation;
          const sensors = this.sensor_types
             .filter((el) => el.checked)
             .map((el) => el.value);
 
          const iterator = [...this.nodes];
+         const organ = await this._getOrgan(this.network);
 
-         this.createValue(iterator, sensors);
+         this.createValue(iterator, sensors, organ);
       },
 
-      createValue(iterator, sensors) {
+      createValue(iterator, sensors, organ) {
          console.log("inside createValue...");
          const value = iterator.shift();
 
@@ -193,6 +194,7 @@ export default {
             const model = new SpinalBacnetValueModel(
                this.graph,
                this.context,
+               organ,
                this.network,
                realNode,
                sensors
@@ -282,6 +284,12 @@ export default {
 
       *convertListToIterator(devices) {
          yield* devices;
+      },
+
+      _getOrgan(network) {
+         if (network) {
+            return network.getElement();
+         }
       },
    },
 };
