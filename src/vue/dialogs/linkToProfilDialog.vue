@@ -251,3 +251,10 @@ export default {
   align-items: center;
 } */
 </style>
+
+<style>
+.mdDialogContainer .md-dialog-container {
+   max-width: 100%;
+   max-height: 100%;
+}
+</style>

@@ -44,9 +44,10 @@ with this file. If not, see
                :key="index"
                @click="selectItem(item.id)"
                :class="{'selected' : item.id === itemSelected}"
+               v-tooltip="item.name"
             >
 
-               {{item.name}}
+               <span class="md-list-item-text">{{item.name}}</span>
 
             </md-list-item>
          </md-list>
@@ -98,6 +99,14 @@ export default {
 
 .subContent .container .list-item {
    border-bottom: 1px solid grey;
+}
+
+.subContent .container .list-item .md-list-item-text {
+   width: 100%;
+   display: block;
+   overflow: hidden;
+   white-space: nowrap;
+   text-overflow: ellipsis;
 }
 
 .subContent .container .list-item.selected {

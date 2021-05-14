@@ -60,5 +60,9 @@ export default {
 </script>
 
 
-<style scoped>
+<style>
+.mdDialogContainer .md-dialog-container {
+   max-width: 100%;
+   max-height: 100%;
+}
 </style>
