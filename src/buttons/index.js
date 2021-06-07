@@ -4,11 +4,12 @@ import stopBtn from "./bacnet/stop";
 // import editTimeIntervalBtn from "./bacnet/editTimeInterval";
 import createBacnetValue from "./bacnet/createBacnetValue";
 import locateBimObject from "./bacnet/locateBimObject";
-
+import manageMonitoring from "./bacnet/monitoring";
 import createNetworkContext from "./viewer/createNetworkContext";
 import addOrganBtn from "./viewer/addOrgan";
-// import linkProfilToBmsDevice from "./viewer/linkProfil";
-import linkDeviceToBim from "./viewer/linkDeviceToBim";
+import linkProfilToBmsDevice from "./viewer/linkProfil";
+import unLinkProfilToBmsDevice from "./viewer/unLinkProfil";
+// import linkDeviceToBim from "./viewer/linkDeviceToBim";
 
 export {
    discoverNetworkBtn,
@@ -17,8 +18,10 @@ export {
    stopBtn,
    // editTimeIntervalBtn,
    addOrganBtn,
-   // linkProfilToBmsDevice,
+   linkProfilToBmsDevice,
+   unLinkProfilToBmsDevice,
    createBacnetValue,
-   linkDeviceToBim,
-   locateBimObject
+   // linkDeviceToBim,
+   locateBimObject,
+   manageMonitoring
 }

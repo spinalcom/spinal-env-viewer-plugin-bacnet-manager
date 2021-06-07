@@ -44,7 +44,7 @@ export default {
    },
    methods: {
       opened(option) {
-         console.log(option);
+         // console.log(option);
       },
       removed(option) {
          if (option.closeResult && option.inputValue.length > 0) {

@@ -1,8 +1,7 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
-
-const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
+import utilities from "../../js/utilities";
 
 const SIDEBAR = "GraphManagerSideBar";
 
@@ -29,7 +28,7 @@ class StopBtn extends SpinalContextApp {
          if (!option.selectedNode.listener) return -1;
 
          const realNode = SpinalGraphService.getRealNode(option.selectedNode.id.get());
-         const model = await getModel(realNode);
+         const model = await utilities.getModel(realNode);
          return model.listen.get() ? true : -1;
       }
 
@@ -39,11 +38,11 @@ class StopBtn extends SpinalContextApp {
    async action(option) {
       const id = option.selectedNode.id.get();
       const contextId = option.context.id.get();
-      const bmsDevices = await getBmsDevices(contextId, id);
+      const bmsDevices = await utilities.getBmsDevices(contextId, id);
 
       const promises = bmsDevices.map(el => {
          const realNode = SpinalGraphService.getRealNode(el.id.get());
-         return getModel(realNode);
+         return utilities.getModel(realNode);
       })
 
 
@@ -54,31 +53,6 @@ class StopBtn extends SpinalContextApp {
       })
    }
 
-}
-
-
-const getModel = (realNode) => {
-   if (realNode.info.listener) {
-      return new Promise((resolve, reject) => {
-         realNode.info.listener.load(data => resolve(data));
-      });
-   } else {
-      return Promise.resolve(-1);
-   }
-}
-
-const getBmsDevices = async (contextId, id) => {
-   const info = SpinalGraphService.getInfo(id);
-   if (info.type.get() === SpinalBmsDevice.nodeTypeName) {
-      return [info];
-   }
-   return SpinalGraphService.findInContext(id, contextId, (node) => {
-      if (node.getType().get() === SpinalBmsDevice.nodeTypeName) {
-         SpinalGraphService._addNode(node);
-         return true;
-      }
-      return false;
-   })
 }
 
 const stopBtn = new StopBtn()

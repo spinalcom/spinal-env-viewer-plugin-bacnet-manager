@@ -11,12 +11,12 @@ import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 const SIDEBAR = "GraphManagerSideBar";
 
 
-class LinkProfilToBmsDevice extends SpinalContextApp {
+class UnLinkProfilToBmsDevice extends SpinalContextApp {
    constructor() {
       super(
-         "Link Bms device to Profil",
-         "Link Bms device to Profil", {
-         icon: "add_link",
+         "unlink Bms device to Profil",
+         "unlink Bms device to Profil", {
+         icon: "link_off",
          icon_type: "in",
          backgroundColor: "#FF0000",
          fontColor: "#FFFFFF"
@@ -36,7 +36,7 @@ class LinkProfilToBmsDevice extends SpinalContextApp {
 
       // const bmsDevices = await getAllDevices(bmsContextId, nodeId);
 
-      spinalPanelManagerService.openPanel("linkProfilToBmsDeviceDialog", {
+      spinalPanelManagerService.openPanel("unLinkProfilToBmsDeviceDialog", {
          bmsContextId,
          nodeId,
       })
@@ -50,8 +50,8 @@ class LinkProfilToBmsDevice extends SpinalContextApp {
 
 
 
-const linkProfilToBmsDevice = new LinkProfilToBmsDevice()
+const unLinkProfilToBmsDevice = new UnLinkProfilToBmsDevice()
 
-spinalContextMenuService.registerApp(SIDEBAR, linkProfilToBmsDevice, [3]);
+spinalContextMenuService.registerApp(SIDEBAR, unLinkProfilToBmsDevice, [3]);
 
-export default linkProfilToBmsDevice;
+export default unLinkProfilToBmsDevice;

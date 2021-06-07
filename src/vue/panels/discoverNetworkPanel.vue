@@ -264,8 +264,9 @@ export default {
       stopDiscovering() {
          if (this.spinalDiscover) {
             this.spinalDiscover.setResetedMode();
-            this.spinalDiscover.remove().then((result) => {
+            this.spinalDiscover.remove().then(() => {
                this.spinalDiscover = undefined;
+               this.state = STATES.reseted;
             });
          } else {
             this.state = STATES.reseted;
@@ -282,9 +283,9 @@ export default {
       "network.port": function () {
          this.stopDiscovering();
       },
-      "network.name": function () {
-         this.stopDiscovering();
-      },
+      // "network.name": function () {
+      //    this.stopDiscovering();
+      // },
       "network.ips": function () {
          this.stopDiscovering();
       },

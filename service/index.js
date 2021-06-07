@@ -88,8 +88,8 @@ export class SpinalBacnetPluginService {
     */
 
    static linkProfilToDevice(bmsContextId, bmsDeviceId, profilId) {
-      return Promise.all(this.getEndpointsMap(bmsContextId, bmsDeviceId), this.getProfilItemsMap(profilId)).then((result) => {
-         console.log(result)
+      return Promise.all([this.getEndpointsMap(bmsContextId, bmsDeviceId), this.getProfilItemsMap(profilId)]).then((result) => {
+         // console.log(result)
       })
    }
 
@@ -122,7 +122,7 @@ export class SpinalBacnetPluginService {
 
    static getProfilItemsMap(profilId) {
       return this.getItemsList(profilId).then((items) => {
-         console.log(items);
+         // console.log(items);
       })
    }
 

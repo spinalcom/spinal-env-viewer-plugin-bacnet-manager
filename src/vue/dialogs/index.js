@@ -4,6 +4,7 @@ import CreateGTBNetworkContextDialog from "./createContext.vue";
 import ModifyTimeIntervalDialog from "./modifyTimeInterval.vue";
 import AddOrganDialog from "./addOrgan.vue";
 import LinkProfilToBmsDeviceDialog from "./linkToProfilDialog.vue";
+import UnLinkProfilToBmsDeviceDialog from "./unLinkToProfilDialog.vue";
 import LinkToBimAutomateDialog from "./linkToBimAutomate.vue";
 import GetBacnetValueDialog from "./getBacnetValue.vue";
 
@@ -33,6 +34,11 @@ const dialogs = [{
 {
    name: "linkToBimAutomateDialog",
    vueMountComponent: Vue.extend(LinkToBimAutomateDialog),
+   parentContainer: document.body
+},
+{
+   name: "unLinkProfilToBmsDeviceDialog",
+   vueMountComponent: Vue.extend(UnLinkProfilToBmsDeviceDialog),
    parentContainer: document.body
 },
 {

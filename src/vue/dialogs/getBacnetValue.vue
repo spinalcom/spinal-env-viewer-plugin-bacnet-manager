@@ -105,8 +105,12 @@
 <script>
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { SENSOR_TYPES, MESSAGES } from "../../js/constants";
-import { SpinalBacnetValueModel } from "spinal-model-bacnet";
+import {
+   SpinalBacnetValueModel,
+   SpinalOrganConfigModel,
+} from "spinal-model-bacnet";
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
+import utilities from "../../js/utilities";
 
 export default {
    name: "GetBacnetValueDialog",
@@ -135,23 +139,27 @@ export default {
    methods: {
       async opened(option) {
          this.pageSelected = this.PAGES.loading;
-         this.context = SpinalGraphService.getRealNode(option.contextId);
-         this.graph = option.graph;
+         const { selectedNode, context, graph } = option;
+         this.context = SpinalGraphService.getRealNode(context.id);
+         this.graph = graph;
 
-         this.nodes = option.devices.map((el) => ({
+         let devices = await this.getBmsDevices(context.id, selectedNode.id);
+
+         this.nodes = devices.map((el) => ({
             info: el.get(),
             progress: -1,
             message: this.MESSAGES.wait,
          }));
 
-         if (option.networkId) {
-            this.network = SpinalGraphService.getRealNode(option.networkId);
-         } else {
-            this.network = await this._getNetwork(
-               option.contextId,
-               option.nodeId
-            );
-         }
+         this.network = await this._getNetwork(context.id, selectedNode.id);
+         // if (option.networkId) {
+         //    this.network = SpinalGraphService.getRealNode(option.networkId);
+         // } else {
+         //    this.network = await this._getNetwork(
+         //       option.contextId,
+         //       option.nodeId
+         //    );
+         // }
 
          this.pageSelected = this.PAGES.selection;
       },
@@ -199,7 +207,11 @@ export default {
                realNode,
                sensors
             );
+
+            console.log("model", model);
             model.addToNode();
+            let progressProcess;
+
             const modelProcess = model.state.bind(() => {
                switch (model.state.get()) {
                   case "recover":
@@ -209,7 +221,7 @@ export default {
                      break;
                   case "progress":
                      console.log("progress...");
-                     model.progress.bind(() => {
+                     progressProcess = model.progress.bind(() => {
                         value.progress = model.progress.get();
                      });
                      break;
@@ -217,6 +229,8 @@ export default {
                   case "error":
                      console.log("success or error");
                      model.state.unbind(modelProcess);
+                     model.progress.unbind(progressProcess);
+
                      value.message = this.MESSAGES[model.state.get()];
                      value.progress = -1;
 
@@ -253,19 +267,52 @@ export default {
       },
 
       async _getNetwork(contextId, nodeId) {
-         const networks = await SpinalGraphService.getChildrenInContext(
-            contextId,
-            contextId
-         );
-         const parentId = await this._getParent(nodeId);
+         const info = SpinalGraphService.getInfo(nodeId);
 
-         for (const network of networks) {
-            const id = network.id.get();
-            const childId = SpinalGraphService.getChildrenIds(id);
-            if (childId.indexOf(parentId) !== -1) {
-               return SpinalGraphService.getRealNode(id);
+         if (info.type.get() === SpinalBmsNetwork.nodeTypeName) {
+            const parents = await SpinalGraphService.getParents(nodeId, [
+               SpinalBmsNetwork.relationName,
+            ]);
+            const organ = parents.find(
+               (el) => el.type.get() === SpinalOrganConfigModel.TYPE
+            );
+            // console.log("organ", organ);
+            if (organ) return SpinalGraphService.getRealNode(organ.id.get());
+         } else {
+            const networks = await SpinalGraphService.getChildrenInContext(
+               contextId,
+               contextId
+            );
+            const parentId = await this._getParent(nodeId);
+
+            for (const network of networks) {
+               const id = network.id.get();
+               const childId = SpinalGraphService.getChildrenIds(id);
+               if (childId.indexOf(parentId) !== -1) {
+                  return SpinalGraphService.getRealNode(id);
+               }
             }
          }
+      },
+
+      _getOrgan(network) {
+         if (network) {
+            return network.getElement();
+         }
+      },
+
+      async getBmsDevices(contextId, id) {
+         const info = SpinalGraphService.getInfo(id);
+         if (info.type.get() === SpinalBmsDevice.nodeTypeName) {
+            return [info];
+         }
+         return SpinalGraphService.findInContext(id, contextId, (node) => {
+            if (node.getType().get() === SpinalBmsDevice.nodeTypeName) {
+               SpinalGraphService._addNode(node);
+               return true;
+            }
+            return false;
+         });
       },
 
       async _getParent(nodeId) {
@@ -282,15 +329,9 @@ export default {
          }
       },
 
-      *convertListToIterator(devices) {
-         yield* devices;
-      },
+      // async getNetworkId(nodeId) {
 
-      _getOrgan(network) {
-         if (network) {
-            return network.getElement();
-         }
-      },
+      // },
    },
 };
 </script>

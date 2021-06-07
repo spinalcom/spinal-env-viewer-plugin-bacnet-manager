@@ -1,8 +1,8 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 import { SpinalBmsDevice } from "spinal-model-bmsnetwork";
-import { SpinalListenerModel } from "spinal-model-bacnet";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
+import utilities from "../../js/utilities";
 
 const SIDEBAR = "GraphManagerSideBar";
 
@@ -26,7 +26,7 @@ class Start extends SpinalContextApp {
          const id = option.selectedNode.id.get();
          const realNode = SpinalGraphService.getRealNode(id);
 
-         const model = await getModel(realNode);
+         const model = await utilities.getModel(realNode);
          if (model != -1) return true;
       }
 
@@ -36,7 +36,7 @@ class Start extends SpinalContextApp {
    async action(option) {
       const id = option.selectedNode.id.get();
       const realNode = SpinalGraphService.getRealNode(id);
-      const model = await getModel(realNode);
+      const model = await utilities.getModel(realNode);
 
       if (model != -1) {
          spinalPanelManagerService.openPanel("modifyTimeIntervalDialog", {
@@ -53,15 +53,6 @@ class Start extends SpinalContextApp {
 }
 
 
-const getModel = (realNode) => {
-   if (realNode.info.listener) {
-      return new Promise((resolve, reject) => {
-         realNode.info.listener.load(data => resolve(data));
-      });
-   } else {
-      return Promise.resolve(-1);
-   }
-}
 
 const start = new Start()
 

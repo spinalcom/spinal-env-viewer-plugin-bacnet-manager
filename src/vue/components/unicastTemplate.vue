@@ -77,7 +77,6 @@ export default {
       },
 
       uploadFile() {
-         this.isLoading = true;
          let input = document.createElement("input");
          input.type = "file";
          input.accept =
@@ -87,6 +86,8 @@ export default {
          input.addEventListener(
             "change",
             async (event) => {
+               this.isLoading = true;
+
                try {
                   const file = event.target.files[0];
                   const dataJson = await spinalExcelManager.convertExcelToJson(
@@ -109,10 +110,10 @@ export default {
                      el.id = index;
                      return el;
                   });
-                  console.log(this.network.ips);
+                  // console.log(this.network.ips);
                   this.isLoading = false;
                } catch (error) {
-                  console.log("error", error);
+                  // console.log("error", error);
                   this.isLoading = false;
                }
             },

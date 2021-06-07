@@ -1,28 +1,36 @@
 <template>
-   <md-table
-      v-model="devices"
+   <div
       class="devices_table"
-      @md-selected="onSelect"
       v-if="show === STATES.discovered"
    >
-      <!-- md-fixed-header -->
+      <div class="header">
+         <div>{{selected.length}} selected / {{devices.length}} found</div>
+         <!-- <div>{{devices.length}} controller(s) found</div> -->
+      </div>
 
-      <md-table-row
-         slot="md-table-row"
-         slot-scope="{ item }"
-         md-selectable="multiple"
-         md-auto-select
+      <md-table
+         class="tablecontent"
+         v-model="devices"
+         @md-selected="onSelect"
       >
-         <md-table-cell
-            md-label="Name"
-            md-sort-by="name"
-         >{{ item.name }}</md-table-cell>
+         <!-- md-fixed-header -->
 
-         <md-table-cell md-label="deviceId">{{ item.deviceId }}</md-table-cell>
+         <md-table-row
+            slot="md-table-row"
+            slot-scope="{ item }"
+            md-selectable="multiple"
+            md-auto-select
+         >
+            <md-table-cell
+               md-label="Name"
+               md-sort-by="name"
+            >{{ item.name }}</md-table-cell>
 
-         <md-table-cell md-label="address">{{ item.address }}</md-table-cell>
+            <md-table-cell md-label="deviceId">{{ item.deviceId }}</md-table-cell>
 
-         <!-- <md-table-cell
+            <md-table-cell md-label="address">{{ item.address }}</md-table-cell>
+
+            <!-- <md-table-cell
             class="configureMonitoring"
             md-label="configure Monitoring"
          >
@@ -34,8 +42,9 @@
             </md-button>
          </md-table-cell> -->
 
-      </md-table-row>
-   </md-table>
+         </md-table-row>
+      </md-table>
+   </div>
 
    <div
       class="discover_container"
@@ -48,6 +57,7 @@
             class="md-primary md-raised"
             v-if="show === STATES.reseted"
             @click="discover"
+            :disabled="disabledBtn()"
          >Discover</md-button>
 
          <md-button
@@ -71,7 +81,6 @@
             </div>
 
          </div>
-
       </div>
 
    </div>
@@ -95,7 +104,17 @@ export default {
       };
    },
    methods: {
-      disabledBtn() {},
+      disabledBtn() {
+         if (this.network.name.trim().length === 0) return true;
+         if (this.network.useBroadcast) {
+            if (this.network.address.length === 0) return true;
+            if (this.network.port.length === 0) return true;
+         } else {
+            if (this.network.ips.length === 0) return true;
+         }
+
+         return false;
+      },
 
       onSelect(items) {
          this.$emit("select", items);
@@ -171,7 +190,21 @@ export default {
    height: 100%;
    margin: auto;
    overflow: hidden;
-   background: red;
+}
+
+.discover_container .devices_table .header {
+   width: 99%;
+   height: 50px;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   font-size: 1.4em;
+   border: 1px dashed grey;
+}
+
+.discover_container .devices_table .tablecontent {
+   width: 100%;
+   height: calc(100% - 50px);
 }
 </style>
 

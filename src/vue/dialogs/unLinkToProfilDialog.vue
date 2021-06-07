@@ -4,24 +4,16 @@
       :md-active.sync="showDialog"
       @md-closed="closeDialog(false)"
    >
-      <md-dialog-title class="dialogTitle">Select Profil
+      <md-dialog-title class="dialogTitle">Unlink device to Profil
       </md-dialog-title>
       <md-dialog-content class="content">
-         <link-component
+
+         <div
+            class="loading"
             v-if="pageSelected === PAGES.selection"
-            :context_title="'Profils'"
-            :category_title="'Categories'"
-            :group_title="'Devices'"
-            :data="data"
-            :profils="profils"
-            :devices="devices"
-            :contextSelected="contextSelected"
-            :profilSelected="profilSelected"
-            :deviceSelected="deviceSelected"
-            @selectContext="selectContext"
-            @selectProfil="selectProfil"
-            @selectDevice="selectDevice"
-         ></link-component>
+         >
+            Do you want unlink devices to profil ?
+         </div>
 
          <div
             class="loading"
@@ -66,9 +58,9 @@
 
          <md-button
             class="md-primary"
-            :disabled="disabled()"
-            @click="createLinks"
-         >Link</md-button>
+            :disabled="pageSelected !== PAGES.selection"
+            @click="unLink"
+         >Yes</md-button>
 
       </md-dialog-actions>
    </md-dialog>
@@ -119,14 +111,6 @@ export default {
          showDialog: true,
          pageSelected: this.PAGES.selection,
          percent: 0,
-
-         data: [],
-         profils: [],
-         devices: [],
-
-         contextSelected: undefined,
-         profilSelected: undefined,
-         deviceSelected: undefined,
       };
    },
    mounted() {
@@ -147,25 +131,15 @@ export default {
             option.nodeId
          );
 
-         this.getAllData().then(() => {
-            this.pageSelected = this.PAGES.selection;
-         });
+         this.pageSelected = this.PAGES.selection;
       },
 
       removed(option) {
          this.showDialog = false;
       },
 
-      async createLinks() {
+      async unLink() {
          this.pageSelected = this.PAGES.creation;
-         // const promises = this.bmsDevices.map(({ id }) => {
-
-         //    // return SpinalBacnetPluginService.linkProfilToDevice(
-         //    //    this.bmsContextId,
-         //    //    id,
-         //    //    this.deviceSelected
-         //    // );
-         // });
 
          const ids = this.bmsDevices.map((el) => el.id);
          const listeLength = ids.length;
@@ -174,10 +148,9 @@ export default {
          while (!isError && ids.length > 0) {
             const id = ids.shift();
             try {
-               await LinkBmsDeviceService.linkProfilToBmsDevice(
+               await LinkBmsDeviceService.unLinkProfilToBmsDevice(
                   this.bmsContextId,
-                  id,
-                  this.deviceSelected
+                  id
                );
 
                this.percent = Math.floor(
@@ -201,17 +174,6 @@ export default {
          if (typeof this.onFinised === "function") {
             this.onFinised(closeResult);
          }
-      },
-
-      getAllData() {
-         // return deviceProfilService
-         return DeviceProfileUtilities.getDeviceContextTreeStructure().then(
-            (result) => {
-               this.data = result;
-               this.updateProfils();
-               return;
-            }
-         );
       },
 
       disabled() {
@@ -280,8 +242,8 @@ export default {
 
 <style scoped>
 .mdDialogContainer {
-   width: 60%;
-   height: 600px;
+   width: 400px;
+   height: 300px;
 }
 .mdDialogContainer .dialogTitle {
    text-align: center;

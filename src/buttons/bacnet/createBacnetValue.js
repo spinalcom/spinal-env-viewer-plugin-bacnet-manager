@@ -2,9 +2,6 @@ import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-co
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
-import { SpinalGraphService } from "spinal-env-viewer-graph-service";
-import { SpinalOrganConfigModel } from "spinal-model-bacnet";
-
 
 const SIDEBAR = "GraphManagerSideBar";
 const icon = require("../../assets/add.svg")
@@ -29,51 +26,12 @@ class CreateBacnetValue extends SpinalContextApp {
 
    async action(option) {
 
-      const id = option.selectedNode.id.get();
-      const contextId = option.context.id.get();
-      const type = option.selectedNode.type.get();
-      let devices;
-      let networkId;
-      let nodeId;
-
-      if (type === SpinalBmsNetwork.nodeTypeName) {
-         networkId = await getNetworkId(id);
-         devices = await getBmsDevices(contextId, id);
-      } else {
-         nodeId = id;
-         devices = [option.selectedNode]
-      }
-
       spinalPanelManagerService.openPanel("getBacnetValueDialog", {
-         networkId,
-         nodeId,
-         devices,
-         contextId,
-         graph: option.graph
+         selectedNode: option.selectedNode.get(),
+         context: option.context.get(),
+         graph: option.graph,
       })
    }
-}
-
-const getBmsDevices = async (contextId, id) => {
-   const info = SpinalGraphService.getInfo(id);
-   if (info.type.get() === SpinalBmsDevice.nodeTypeName) {
-      return [info];
-   }
-   return SpinalGraphService.findInContext(id, contextId, (node) => {
-      if (node.getType().get() === SpinalBmsDevice.nodeTypeName) {
-         SpinalGraphService._addNode(node);
-         return true;
-      }
-      return false;
-   })
-}
-
-
-const getNetworkId = async (nodeId) => {
-   const parents = await SpinalGraphService.getParents(nodeId, [SpinalBmsNetwork.relationName]);
-   const organ = parents.find(el => el.type.get() === SpinalOrganConfigModel.TYPE);
-   console.log("organ", organ);
-   if (organ) return organ.id.get();
 }
 
 const createBacnetValue = new CreateBacnetValue()
