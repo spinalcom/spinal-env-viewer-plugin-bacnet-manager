@@ -132,6 +132,22 @@ export default {
    _getBacnetObjectType(type) {
       const objectName = ("object_" + type.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)).toUpperCase();
       return bacnet.enum.ObjectTypes[objectName];
-   }
+   },
+
+   async getBmsDevices(contextId, id) {
+      const info = SpinalGraphService.getInfo(id);
+      if (info.type.get() === SpinalBmsDevice.nodeTypeName) {
+         return [info];
+      }
+      const res = [];
+
+      return SpinalGraphService.findInContext(id, contextId, (node) => {
+         if (node.getType().get() === SpinalBmsDevice.nodeTypeName) {
+            SpinalGraphService._addNode(node);
+            return true;
+         }
+         return false;
+      })
+   },
 
 }

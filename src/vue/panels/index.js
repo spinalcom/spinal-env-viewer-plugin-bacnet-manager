@@ -27,7 +27,7 @@ const panels = [
          closeBehaviour: "hide",
       },
       style: {
-         minWidth: '462px',
+         minWidth: '620px',
          height: "670px",
          left: "400px",
       },
