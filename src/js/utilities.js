@@ -1,6 +1,8 @@
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
+import { SpinalListenerModel } from "spinal-model-bacnet";
+
 
 const bacnet = require('bacstack');
 
@@ -10,7 +12,12 @@ export default {
    async getNetwork(id, contextId) {
       const realNode = SpinalGraphService.getRealNode(id);
       return realNode.getParents([SpinalBmsDevice.relationName]).then((parents) => {
-         const found = parents.find(el => el.contextIds[contextId]);
+         const found = parents.find(el => {
+            if (el && el.contextIds) {
+               return el.contextIds[contextId];
+            }
+
+         });
 
          return found;
       })
@@ -19,7 +26,12 @@ export default {
    getOrgan(networkId, contextId) {
       const realNode = SpinalGraphService.getRealNode(networkId);
       return realNode.getParents([SpinalBmsNetwork.relationName]).then((parents) => {
-         const found = parents.find(el => el.contextIds[contextId]);
+         const found = parents.find(el => {
+            if (el && el.contextIds) {
+               return el.contextIds[contextId];
+            }
+
+         });
 
          if (found) {
             return found.getElement();
@@ -76,15 +88,6 @@ export default {
       } else {
          console.log("no item found");
       }
-
-      // return SpinalGraphService.findInContextByType(deviceId, contextId, SpinalBmsEndpoint.nodeTypeName).then((endpoints) => {
-      //    const promises = endpoints.map(async (node) => {
-      //       return {
-      //          bmsNetwork: await getBmsNetworkElement(node),
-      //          interval: await getTimeInterval(node)
-      //       }
-      //    })
-      // })
    },
 
    async getSharedAttribute(intervalNode) {
@@ -106,22 +109,6 @@ export default {
       const promises = profilItems.map(async profilItem => {
 
          return { instance: parseInt(profilItem.IDX.get()) + 1, type: this._getBacnetObjectType(profilItem.type.get()) }
-         // // const children = await SpinalGraphService.getParents(profilItem.id.get(), [SpinalBmsEndpoint.relationName]);
-         // const parents = await SpinalGraphService.getParents(profilItem.id.get(), ["hasBacnetItem"]);
-         // const children = parents.map(el => SpinalGraphService.getInfo(el.id.get()));
-
-         // const prom2 = children.filter(el => typeof el.contextIds[bmsContextId] !== "undefined").map(el => el.element.load());
-         // return Promise.all(prom2).then((result) => {
-         //    const res = [];
-         //    result.map(el => ({ type: el.typeId.get(), instance: el.id.get() })).forEach(item => {
-         //       const i = res.findIndex(x => x.type === item.type && x.instance === item.instance);
-         //       if (i <= -1) {
-         //          res.push(item);
-         //       }
-         //    })
-
-         //    return res;
-         // })
       });
 
       return Promise.all(promises).then((result) => {
@@ -150,4 +137,43 @@ export default {
       })
    },
 
+
+   async startMonitoring(graph, contextId, deviceId) {
+      const context = SpinalGraphService.getRealNode(contextId);
+      const realNode = SpinalGraphService.getRealNode(deviceId);
+      const model = await this.getModel(realNode);
+      const monitor = await this.getMonitoringInfo(deviceId, contextId);
+
+      if (model != -1) {
+         if (!monitor) {
+            model.listen.set(false);
+         } else {
+            if (model.monitor) {
+               model.monitor.set(monitor);
+            } else {
+               model.add_attr({
+                  monitor: monitor
+               })
+            }
+
+            model.listen.set(true);
+         }
+
+      } else {
+         const network = await this.getNetwork(deviceId, contextId);
+         const organ = await this.getOrgan(network.getId().get(), contextId);
+
+         const spinalListener = new SpinalListenerModel(graph, context, network, realNode, organ, monitor);
+         realNode.info.add_attr({
+            listener: new Ptr(spinalListener)
+         })
+      }
+
+   },
+
+   async stopMonitoring(deviceId) {
+      const realNode = SpinalGraphService.getRealNode(deviceId);
+      const model = await this.getModel(realNode);
+      if (model != -1) model.listen.set(false);
+   }
 }

@@ -2,9 +2,9 @@
    <div class="device">
       <div
          class="name"
-         v-tooltip="device.info.name"
+         v-tooltip="device.name"
       >
-         {{device.info.name}}
+         {{device.name}}
       </div>
 
       <div
@@ -71,67 +71,39 @@ export default {
    props: {
       device: {},
       context: {},
+      graph: {},
    },
    data() {
       return {
          saveTimeSeries: false,
+         model: undefined,
       };
    },
-   created() {
-      if (this.device.model && this.device.model.saveTimeSeries) {
-         this.saveTimeSeries = this.device.model.saveTimeSeries.get();
+   async created() {
+      const realNode = SpinalGraphService.getRealNode(this.device.id);
+      this.model = await utilities.getModel(realNode);
+      if (this.model && this.model.saveTimeSeries) {
+         this.saveTimeSeries = this.model.saveTimeSeries.get();
       }
    },
-   mounted() {
-      // console.log("mounted");
-      // if (this.device.model && this.device.model.saveTimeSeries) {
-      //    this.saveTimeSeries = this.device.model.saveTimeSeries.get();
-      // }
-   },
+   mounted() {},
    methods: {
       async startMonitoring() {
-         const deviceId = this.device.info.id;
+         const deviceId = this.device.id;
          const contextId = this.context.id;
 
-         const model = this.device.model;
-         const monitor = await utilities.getMonitoringInfo(deviceId, contextId);
-
-         if (model != -1) {
-            if (!monitor) {
-               model.listen.set(false);
-            } else {
-               model.monitor.set(monitor);
-               model.listen.set(true);
-            }
-         } else {
-            const graph = this.graph;
-            const context = SpinalGraphService.getRealNode(contextId);
-            const realNode = SpinalGraphService.getRealNode(deviceId);
-            const network = await utilities.getNetwork(deviceId, contextId);
-
-            const organ = await utilities.getOrgan(
-               network.getId().get(),
-               contextId
-            );
-
-            const spinalListener = new SpinalListenerModel(
-               graph,
-               context,
-               network,
-               realNode,
-               organ,
-               monitor
-            );
-            realNode.info.add_attr({
-               listener: new Ptr(spinalListener),
-            });
+         await utilities.startMonitoring(this.graph, contextId, deviceId);
+         if (!this.model || this.model === -1) {
+            const realNode = SpinalGraphService.getRealNode(this.device.id);
+            this.model = await utilities.getModel(realNode);
          }
       },
 
       stopMonitoring() {
-         if (this.device.model != -1 && this.device.model.listen) {
-            this.device.model.listen.set(false);
-         }
+         // if (this.model != -1 && this.model.listen) {
+         //    this.model.listen.set(false);
+         // }
+         utilities.stopMonitoring(this.device.id);
       },
 
       updateTimeSeries(value) {
@@ -143,36 +115,38 @@ export default {
       ////////////////////////////////////////////
 
       disabledRestart() {
-         const model = this.device.model;
+         const model = this.model;
          return !(model && model !== -1 && model.listen && model.listen.get());
       },
 
       disabledStart() {
-         const model = this.device.model;
+         const model = this.model;
          return model && model !== -1 && model.listen && model.listen.get();
       },
 
       disabledStop() {
-         const model = this.device.model;
+         const model = this.model;
          return !(model && model !== -1 && model.listen && model.listen.get());
       },
    },
    computed: {
       state() {
-         return this.device.model.listen && this.device.model.listen.get()
+         return this.model && this.model.listen && this.model.listen.get()
             ? "Running"
             : "Stopped";
       },
    },
    watch: {
       saveTimeSeries() {
-         if (this.device.model && this.device.model.saveTimeSeries) {
-            this.device.model.saveTimeSeries.set(this.saveTimeSeries);
-            return;
+         if (this.model) {
+            if (this.model.saveTimeSeries) {
+               this.model.saveTimeSeries.set(this.saveTimeSeries);
+               return;
+            }
+            this.model.add_attr({
+               saveTimeSeries: this.saveTimeSeries,
+            });
          }
-         this.device.model.add_attr({
-            saveTimeSeries: this.saveTimeSeries,
-         });
       },
    },
 };

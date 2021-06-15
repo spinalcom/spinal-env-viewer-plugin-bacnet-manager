@@ -2,6 +2,7 @@ import { spinalCore, FileSystem } from "spinal-core-connectorjs_type";
 import { SpinalGraphService, SPINAL_RELATION_PTR_LST_TYPE } from "spinal-env-viewer-graph-service";
 import { SpinalOrganConfigModel } from "spinal-model-bacnet";
 import { SpinalBmsEndpoint } from "spinal-model-bmsnetwork";
+import { v4 as uuidv4 } from "uuid";
 
 export class SpinalBacnetPluginService {
    constructor() { }
@@ -31,7 +32,18 @@ export class SpinalBacnetPluginService {
 
 
             return Promise.all(promises).then((result) => {
-               resolve(result);
+               // for (const element of result) {
+               //    if (!element.id) {
+               //       console.log(element.name.get(), "element.id in undefined");
+               //       element.add_attr({ id: uuidv4() })
+               //    }
+               // }
+               resolve(result.map(organ => {
+                  const id = organ._server_id;
+                  const obj = organ.get();
+                  obj._server_id = id;
+                  return obj;
+               }));
             })
          })
       })

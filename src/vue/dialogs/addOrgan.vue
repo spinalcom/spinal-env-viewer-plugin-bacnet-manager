@@ -24,8 +24,8 @@
                slot="md-table-row"
                slot-scope="{ item }"
             >
-               <md-table-cell md-label="Name">{{ item.name.get() }}</md-table-cell>
-               <md-table-cell md-label="Type">{{ item.type.get() }}</md-table-cell>
+               <md-table-cell md-label="Name">{{ item.name }}</md-table-cell>
+               <md-table-cell md-label="Type">{{ item.type }}</md-table-cell>
                <md-table-cell md-label="Action">
                   <organ-button
                      :ref="item._server_id"

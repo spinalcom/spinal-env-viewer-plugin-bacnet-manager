@@ -44,33 +44,41 @@ class Start extends SpinalContextApp {
       const graph = option.graph;
 
       const bmsDevices = await utilities.getBmsDevices(contextId, id);
-      const context = SpinalGraphService.getRealNode(contextId);
+      // const context = SpinalGraphService.getRealNode(contextId);
 
       while (bmsDevices.length > 0) {
          const device = bmsDevices.shift();
          const deviceId = device.id.get();
 
-         const realNode = SpinalGraphService.getRealNode(deviceId);
-         const model = await utilities.getModel(realNode);
-         const monitor = await utilities.getMonitoringInfo(deviceId, contextId);
+         await utilities.startMonitoring(graph, contextId, deviceId);
+         // const realNode = SpinalGraphService.getRealNode(deviceId);
+         // const model = await utilities.getModel(realNode);
+         // const monitor = await utilities.getMonitoringInfo(deviceId, contextId);
 
-         if (model != -1) {
-            if (!monitor) {
-               model.listen.set(false);
-            } else {
-               model.monitor.set(monitor);
-               model.listen.set(true);
-            }
+         // if (model != -1) {
+         //    if (!monitor) {
+         //       model.listen.set(false);
+         //    } else {
+         //       if (model.monitor) {
+         //          model.monitor.set(monitor);
+         //       } else {
+         //          model.add_attr({
+         //             monitor: monitor
+         //          })
+         //       }
 
-         } else {
-            const network = await utilities.getNetwork(deviceId, contextId);
-            const organ = await utilities.getOrgan(network.getId().get(), contextId);
+         //       model.listen.set(true);
+         //    }
 
-            const spinalListener = new SpinalListenerModel(graph, context, network, realNode, organ, monitor);
-            realNode.info.add_attr({
-               listener: new Ptr(spinalListener)
-            })
-         }
+         // } else {
+         //    const network = await utilities.getNetwork(deviceId, contextId);
+         //    const organ = await utilities.getOrgan(network.getId().get(), contextId);
+
+         //    const spinalListener = new SpinalListenerModel(graph, context, network, realNode, organ, monitor);
+         //    realNode.info.add_attr({
+         //       listener: new Ptr(spinalListener)
+         //    })
+         // }
 
       }
 

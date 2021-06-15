@@ -40,83 +40,18 @@
             >Stop saving all time series</md-button>
          </div>
 
-         <!-- 
-         <md-button class="md-icon-button">
-            <md-icon class="md-primary">star</md-icon>
-         </md-button> -->
       </div>
 
       <div class="devices_list md-scrollbar">
 
          <device-monitoring
             v-for="device in devices"
-            :key="device.info.id"
-            :ref="device.info.id"
+            :key="device.id"
+            :ref="device.id"
             :device="device"
             :context="context"
+            :graph="graph"
          ></device-monitoring>
-
-         <!-- <div
-            class="device"
-            v-for="device in devices"
-            :key="device.info.id"
-         >
-            <div
-               class="name"
-               v-tooltip="device.info.name"
-            >
-               {{device.info.name}}
-            </div>
-
-            <div
-               class="state"
-               :class="getState(device.model)"
-            >
-               {{getState(device.model)}}
-            </div>
-
-            <div class="actions">
-
-               <md-button
-                  class="md-icon-button md-primary"
-                  v-tooltip="'start'"
-                  :disabled="disabledStart(device.model)"
-                  @click="startMonitoring(device)"
-               >
-                  <md-icon>play_arrow</md-icon>
-               </md-button>
-
-               <md-button
-                  class="md-icon-button md-primary"
-                  v-tooltip="'restart'"
-                  :disabled="disabledRestart(device.model)"
-                  @click="startMonitoring(device)"
-               >
-                  <md-icon>replay</md-icon>
-               </md-button>
-
-               <md-button
-                  class="md-icon-button md-accent"
-                  v-tooltip="'stop'"
-                  :disabled="disabledStop(device.model)"
-                  @click="stopMonitoring(device)"
-               >
-                  <md-icon>stop</md-icon>
-               </md-button>
-
-               <div class="block">
-                  <div class="input">
-                     <md-checkbox
-                        class="md-primary"
-                        v-model="withoutSetValue"
-                     >Save TimeSeries</md-checkbox>
-                  </div>
-               </div>
-
-   
-
-            </div>
-         </div> -->
 
       </div>
    </div>
@@ -129,9 +64,6 @@
 </template>
 
 <script>
-import { SpinalGraphService } from "spinal-env-viewer-graph-service";
-import { SpinalBmsDevice } from "spinal-model-bmsnetwork";
-import { SpinalListenerModel } from "spinal-model-bacnet";
 import DeviceMonitoring from "../components/monitoring/devicemonitor.vue";
 import utilities from "../../js/utilities";
 
@@ -177,41 +109,38 @@ export default {
       closed() {},
 
       async getBmsDevices(contextId, id) {
-         const realNode = SpinalGraphService.getRealNode(id);
-         if (realNode.getType().get() === SpinalBmsDevice.nodeTypeName) {
-            return [
-               {
-                  info: realNode.info.get(),
-                  node: realNode,
-                  model: await utilities.getModel(realNode),
-               },
-            ];
-         }
-         const res = [];
-
-         return SpinalGraphService.findInContext(id, contextId, (node) => {
-            if (node.getType().get() === SpinalBmsDevice.nodeTypeName) {
-               SpinalGraphService._addNode(node);
-               res.push({
-                  info: node.info.get(),
-                  node,
-               });
-               return true;
-            }
-            return false;
-         }).then(() => {
-            const promises = res.map(async (el) => {
-               el.model = await utilities.getModel(el.node);
-               return el;
-            });
-
-            return Promise.all(promises);
+         return utilities.getBmsDevices(contextId, id).then((devices) => {
+            return devices.map((el) => el.get());
          });
+         // const realNode = SpinalGraphService.getRealNode(id);
+         // if (realNode.getType().get() === SpinalBmsDevice.nodeTypeName) {
+         //    return [
+         //       {
+         //          info: realNode.info.get(),
+         //          node: realNode,
+         //          model: await utilities.getModel(realNode),
+         //       },
+         //    ];
+         // }
+         // const res = [];
+         // return SpinalGraphService.findInContext(id, contextId, (node) => {
+         //    if (node.getType().get() === SpinalBmsDevice.nodeTypeName) {
+         //       SpinalGraphService._addNode(node);
+         //       res.push({
+         //          info: node.info.get(),
+         //          node,
+         //       });
+         //       return true;
+         //    }
+         //    return false;
+         // }).then(() => {
+         //    const promises = res.map(async (el) => {
+         //       el.model = await utilities.getModel(el.node);
+         //       return el;
+         //    });
+         //    return Promise.all(promises);
+         // });
       },
-
-      // getState(model) {
-      //    return model.listen && model.listen.get() ? "Running" : "Stopped";
-      // },
 
       ////////////////////////////////////////////
       ////              CLIKS                   //
@@ -222,7 +151,7 @@ export default {
          let index = 0;
 
          while (index <= length - 1) {
-            const deviceId = this.devices[index].info.id;
+            const deviceId = this.devices[index].id;
             const [ref] = this.$refs[deviceId];
             if (ref) {
                await ref.startMonitoring();
@@ -237,7 +166,7 @@ export default {
          let index = 0;
 
          while (index <= length - 1) {
-            const deviceId = this.devices[index].info.id;
+            const deviceId = this.devices[index].id;
             const [ref] = this.$refs[deviceId];
             if (ref) {
                await ref.stopMonitoring();
@@ -252,78 +181,15 @@ export default {
          let index = 0;
 
          while (index <= length - 1) {
-            const deviceId = this.devices[index].info.id;
+            const deviceId = this.devices[index].id;
             const [ref] = this.$refs[deviceId];
             if (ref) {
                ref.updateTimeSeries(value);
-               // console.log("ref.saveTimeSeries", ref.saveTimeSeries, value);
-               // ref.saveTimeSeries = value;
             }
 
             index++;
          }
       },
-
-      // async startMonitoring(device) {
-      //    const deviceId = device.info.id;
-      //    const contextId = this.context.id;
-
-      //    const model = device.model;
-      //    const monitor = await utilities.getMonitoringInfo(deviceId, contextId);
-
-      //    if (model != -1) {
-      //       if (!monitor) {
-      //          model.listen.set(false);
-      //       } else {
-      //          model.monitor.set(monitor);
-      //          model.listen.set(true);
-      //       }
-      //    } else {
-      //       const graph = this.graph;
-      //       const context = SpinalGraphService.getRealNode(contextId);
-      //       const realNode = SpinalGraphService.getRealNode(deviceId);
-      //       const network = await utilities.getNetwork(deviceId, contextId);
-
-      //       const organ = await utilities.getOrgan(
-      //          network.getId().get(),
-      //          contextId
-      //       );
-
-      //       const spinalListener = new SpinalListenerModel(
-      //          graph,
-      //          context,
-      //          network,
-      //          realNode,
-      //          organ,
-      //          monitor
-      //       );
-      //       realNode.info.add_attr({
-      //          listener: new Ptr(spinalListener),
-      //       });
-      //    }
-      // },
-
-      // stopMonitoring(device) {
-      //    if (device.model != -1 && device.model.listen) {
-      //       device.model.listen.set(false);
-      //    }
-      // },
-
-      ////////////////////////////////////////////
-      ////              DISABLED                //
-      ////////////////////////////////////////////
-
-      // disabledRestart(model) {
-      //    return !(model && model !== -1 && model.listen && model.listen.get());
-      // },
-
-      // disabledStart(model) {
-      //    return model && model !== -1 && model.listen && model.listen.get();
-      // },
-
-      // disabledStop(model) {
-      //    return !(model && model !== -1 && model.listen && model.listen.get());
-      // },
    },
 };
 </script>
