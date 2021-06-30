@@ -1,7 +1,7 @@
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
-import { SpinalListenerModel } from "spinal-model-bacnet";
+import { SpinalListenerModel, Spinal, SpinalMonitorInfoModel } from "spinal-model-bacnet";
 
 
 const bacnet = require('bacstack');
@@ -42,6 +42,50 @@ export default {
       })
    },
 
+   async startMonitoring(graph, contextId, deviceId) {
+      try {
+         const context = SpinalGraphService.getRealNode(contextId);
+         const realNode = SpinalGraphService.getRealNode(deviceId);
+         const model = await this.getModel(realNode);
+         const monitor = await this.getMonitoringInfo(deviceId, contextId);
+
+         if (model != -1) {
+            if (!monitor) {
+               model.listen.set(false);
+            } else {
+               if (model.monitor) {
+                  model.mod_attr("monitor", monitor);
+               } else {
+                  model.add_attr({
+                     monitor: monitor
+                  })
+               }
+
+               model.listen.set(true);
+            }
+
+         } else {
+            const network = await this.getNetwork(deviceId, contextId);
+            const organ = await this.getOrgan(network.getId().get(), contextId);
+
+            const spinalListener = new SpinalListenerModel(graph, context, network, realNode, organ, monitor);
+            realNode.info.add_attr({
+               listener: new Ptr(spinalListener)
+            })
+         }
+      } catch (error) { }
+
+   },
+
+   async stopMonitoring(deviceId) {
+      try {
+         const realNode = SpinalGraphService.getRealNode(deviceId);
+         const model = await this.getModel(realNode);
+         if (model != -1) model.listen.set(false);
+      } catch (error) { }
+
+   },
+
    getModel(realNode) {
       if (realNode.info.listener) {
          return new Promise((resolve, reject) => {
@@ -53,7 +97,7 @@ export default {
    },
 
    async getMonitoringInfo(deviceId, contextId) {
-      const profilContext = SpinalGraphService.getContextWithType("deviceProfileContext")[0];
+      const [profilContext] = SpinalGraphService.getContextWithType("deviceProfileContext");
 
       const profils = await SpinalGraphService.getChildren(deviceId, ["hasBacnetProfile"]);
       const profil = profils[0];
@@ -76,13 +120,17 @@ export default {
          })
 
          return Promise.all(promises).then((result) => {
-            return result.map(({ monitoring, children }) => {
+            const data = result.map(({ monitoring, children }) => {
                return {
                   monitoring: monitoring.Monitoring,
                   interval: monitoring.IntervalTime,
                   children
                }
             })
+
+            const profilNode = SpinalGraphService.getRealNode(profil.id.get());
+
+            return new SpinalMonitorInfoModel(profilNode, data);
          })
 
       } else {
@@ -138,42 +186,4 @@ export default {
    },
 
 
-   async startMonitoring(graph, contextId, deviceId) {
-      const context = SpinalGraphService.getRealNode(contextId);
-      const realNode = SpinalGraphService.getRealNode(deviceId);
-      const model = await this.getModel(realNode);
-      const monitor = await this.getMonitoringInfo(deviceId, contextId);
-
-      if (model != -1) {
-         if (!monitor) {
-            model.listen.set(false);
-         } else {
-            if (model.monitor) {
-               model.monitor.set(monitor);
-            } else {
-               model.add_attr({
-                  monitor: monitor
-               })
-            }
-
-            model.listen.set(true);
-         }
-
-      } else {
-         const network = await this.getNetwork(deviceId, contextId);
-         const organ = await this.getOrgan(network.getId().get(), contextId);
-
-         const spinalListener = new SpinalListenerModel(graph, context, network, realNode, organ, monitor);
-         realNode.info.add_attr({
-            listener: new Ptr(spinalListener)
-         })
-      }
-
-   },
-
-   async stopMonitoring(deviceId) {
-      const realNode = SpinalGraphService.getRealNode(deviceId);
-      const model = await this.getModel(realNode);
-      if (model != -1) model.listen.set(false);
-   }
 }

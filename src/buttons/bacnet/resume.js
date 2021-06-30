@@ -1,6 +1,5 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
-import { SpinalListenerModel } from "spinal-model-bacnet";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 
 import utilities from "../../js/utilities";
@@ -12,12 +11,13 @@ class Start extends SpinalContextApp {
    constructor() {
       super(
          "Start updating device data",
-         "Start updating device data", {
-         icon: "play_arrow",
-         icon_type: "in",
-         backgroundColor: "#FF0000",
-         fontColor: "#FFFFFF"
-      }
+         "Start updating device data",
+         {
+            icon: "play_arrow",
+            icon_type: "in",
+            backgroundColor: "#FF0000",
+            fontColor: "#FFFFFF"
+         }
       );
    }
 
@@ -44,43 +44,13 @@ class Start extends SpinalContextApp {
       const graph = option.graph;
 
       const bmsDevices = await utilities.getBmsDevices(contextId, id);
-      // const context = SpinalGraphService.getRealNode(contextId);
 
-      while (bmsDevices.length > 0) {
-         const device = bmsDevices.shift();
+      const promises = bmsDevices.map(device => {
          const deviceId = device.id.get();
+         return utilities.startMonitoring(graph, contextId, deviceId);
+      })
 
-         await utilities.startMonitoring(graph, contextId, deviceId);
-         // const realNode = SpinalGraphService.getRealNode(deviceId);
-         // const model = await utilities.getModel(realNode);
-         // const monitor = await utilities.getMonitoringInfo(deviceId, contextId);
-
-         // if (model != -1) {
-         //    if (!monitor) {
-         //       model.listen.set(false);
-         //    } else {
-         //       if (model.monitor) {
-         //          model.monitor.set(monitor);
-         //       } else {
-         //          model.add_attr({
-         //             monitor: monitor
-         //          })
-         //       }
-
-         //       model.listen.set(true);
-         //    }
-
-         // } else {
-         //    const network = await utilities.getNetwork(deviceId, contextId);
-         //    const organ = await utilities.getOrgan(network.getId().get(), contextId);
-
-         //    const spinalListener = new SpinalListenerModel(graph, context, network, realNode, organ, monitor);
-         //    realNode.info.add_attr({
-         //       listener: new Ptr(spinalListener)
-         //    })
-         // }
-
-      }
+      await Promise.all(promises);
 
    }
 

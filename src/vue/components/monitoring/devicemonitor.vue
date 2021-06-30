@@ -63,7 +63,6 @@
 
 <script>
 import utilities from "../../../js/utilities";
-import { SpinalListenerModel } from "spinal-model-bacnet";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 
 export default {

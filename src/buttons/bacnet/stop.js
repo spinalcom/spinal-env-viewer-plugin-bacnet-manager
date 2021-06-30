@@ -40,23 +40,12 @@ class StopBtn extends SpinalContextApp {
       const contextId = option.context.id.get();
       const bmsDevices = await utilities.getBmsDevices(contextId, id);
 
-      while (bmsDevices.length > 0) {
-         const device = bmsDevices.shift();
+      const promises = bmsDevices.map(device => {
          const deviceId = device.id.get();
-         await utilities.stopMonitoring(deviceId);
-      }
+         return utilities.stopMonitoring(deviceId);
+      })
 
-      // const promises = bmsDevices.map(el => {
-      //    const realNode = SpinalGraphService.getRealNode(el.id.get());
-      //    return utilities.getModel(realNode);
-      // })
-
-
-      // await Promise.all(promises).then((models) => {
-      //    for (const model of models) {
-      //       if (model != -1) model.listen.set(false);
-      //    }
-      // })
+      await Promise.all(promises);
    }
 
 }

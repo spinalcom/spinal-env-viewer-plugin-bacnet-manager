@@ -112,34 +112,6 @@ export default {
          return utilities.getBmsDevices(contextId, id).then((devices) => {
             return devices.map((el) => el.get());
          });
-         // const realNode = SpinalGraphService.getRealNode(id);
-         // if (realNode.getType().get() === SpinalBmsDevice.nodeTypeName) {
-         //    return [
-         //       {
-         //          info: realNode.info.get(),
-         //          node: realNode,
-         //          model: await utilities.getModel(realNode),
-         //       },
-         //    ];
-         // }
-         // const res = [];
-         // return SpinalGraphService.findInContext(id, contextId, (node) => {
-         //    if (node.getType().get() === SpinalBmsDevice.nodeTypeName) {
-         //       SpinalGraphService._addNode(node);
-         //       res.push({
-         //          info: node.info.get(),
-         //          node,
-         //       });
-         //       return true;
-         //    }
-         //    return false;
-         // }).then(() => {
-         //    const promises = res.map(async (el) => {
-         //       el.model = await utilities.getModel(el.node);
-         //       return el;
-         //    });
-         //    return Promise.all(promises);
-         // });
       },
 
       ////////////////////////////////////////////
@@ -147,48 +119,59 @@ export default {
       ////////////////////////////////////////////
 
       async startAllMonitoring() {
-         const length = this.devices.length;
-         let index = 0;
+         // const length = this.devices.length;
 
-         while (index <= length - 1) {
-            const deviceId = this.devices[index].id;
+         this.devices.forEach((device) => {
+            const deviceId = device.id;
             const [ref] = this.$refs[deviceId];
             if (ref) {
-               await ref.startMonitoring();
+               ref.startMonitoring();
             }
-
-            index++;
-         }
+         });
       },
 
       async stopAllMonitoring() {
-         const length = this.devices.length;
-         let index = 0;
-
-         while (index <= length - 1) {
-            const deviceId = this.devices[index].id;
+         this.devices.forEach((device) => {
+            const deviceId = device.id;
             const [ref] = this.$refs[deviceId];
             if (ref) {
-               await ref.stopMonitoring();
+               ref.stopMonitoring();
             }
+         });
 
-            index++;
-         }
+         // const length = this.devices.length;
+         // let index = 0;
+
+         // while (index <= length - 1) {
+         //    const deviceId = this.devices[index].id;
+         //    const [ref] = this.$refs[deviceId];
+         //    if (ref) {
+         //       await ref.stopMonitoring();
+         //    }
+
+         //    index++;
+         // }
       },
 
       changeTimeSeries(value) {
-         const length = this.devices.length;
-         let index = 0;
-
-         while (index <= length - 1) {
-            const deviceId = this.devices[index].id;
+         this.devices.forEach((device) => {
+            const deviceId = device.id;
             const [ref] = this.$refs[deviceId];
             if (ref) {
                ref.updateTimeSeries(value);
             }
+         });
 
-            index++;
-         }
+         // const length = this.devices.length;
+         // let index = 0;
+         // while (index <= length - 1) {
+         //    const deviceId = this.devices[index].id;
+         //    const [ref] = this.$refs[deviceId];
+         //    if (ref) {
+         //       ref.updateTimeSeries(value);
+         //    }
+         //    index++;
+         // }
       },
    },
 };
