@@ -1,30 +1,17 @@
 <template>
-   <div
-      class="unicast_container"
-      v-if="!isLoading"
-   >
-
+   <div class="unicast_container" v-if="!isLoading">
       <md-field class="contextInput">
          <label>Network Name</label>
          <md-input v-model="network.name"></md-input>
       </md-field>
 
       <div class="header">
+         <div class="button_div addRow" @click="addRow">add row</div>
 
-         <div class="button_div">
-            <div
-               class="button"
-               @click="addRow"
-            >ADD ROW</div>
-         </div>
+         <div class="button_div resetRow" @click="reset">reset</div>
 
-         <div class="button_div">
-            <div
-               class="upload_div"
-               @click="uploadFile"
-            >
-               click to upload file
-            </div>
+         <div class="button_div upload_div" @click="uploadFile">
+            click to upload file
          </div>
       </div>
 
@@ -38,15 +25,10 @@
       </md-content>
    </div>
 
-   <div
-      class="loading"
-      v-else
-   >
+   <div class="loading" v-else>
       <md-progress-spinner md-mode="indeterminate"></md-progress-spinner>
    </div>
-
 </template>
-
 
 <script>
 import InputDataTemplate from "./inputData.vue";
@@ -70,6 +52,10 @@ export default {
             ...this.network.ips,
             { id: id, address: "", deviceId: "" },
          ];
+      },
+
+      reset() {
+         this.network.ips = [{ id: 0, address: "", deviceId: "" }];
       },
 
       removeItem(id) {
@@ -110,10 +96,8 @@ export default {
                      el.id = index;
                      return el;
                   });
-                  // console.log(this.network.ips);
                   this.isLoading = false;
                } catch (error) {
-                  // console.log("error", error);
                   this.isLoading = false;
                }
             },
@@ -122,30 +106,40 @@ export default {
       },
 
       getElementAddress(element) {
-         const list = ["Address", "ADDRESS", "address"];
-         for (const key of list) {
-            if (element[key]) return element[key];
-         }
+         const address = "address";
+         const key = Object.keys(element).find((el) => {
+            return el.toLowerCase() === address;
+         });
+
+         if (key) return element[key];
+         // for (const key of list) {
+         //    if (element[key]) return element[key];
+         // }
       },
 
       getElementDeviceId(element) {
-         const list = [
-            "Device ID",
-            "DeviceID",
-            "deviceID",
-            "device ID",
-            "deviceId",
-            "device Id",
-         ];
+         const deviceId = "deviceid";
+         const key = Object.keys(element).find((el) => {
+            return el.replace(" ", "").toLowerCase() === deviceId;
+         });
 
-         for (const key of list) {
-            if (element[key]) return element[key];
-         }
+         if (key) return element[key];
+
+         // const list = [
+         //    "Device ID",
+         //    "DeviceID",
+         //    "deviceID",
+         //    "device ID",
+         //    "deviceId",
+         //    "device Id",
+         // ];
+         // for (const key of list) {
+         //    if (element[key]) return element[key];
+         // }
       },
    },
 };
 </script>
-
 
 <style scoped>
 .unicast_container {
@@ -164,20 +158,28 @@ export default {
 }
 
 .unicast_container .header .button_div {
-   width: 50%;
-   height: 100%;
-}
-
-.unicast_container .header .button_div .button {
-   width: 100%;
+   /* width: 50%; */
+   flex: 0 1 32%;
    height: 100%;
    display: flex;
    justify-content: center;
    align-items: center;
+   text-transform: capitalize;
    border: 1px solid grey;
+   border-radius: 10px;
 }
 
-.unicast_container .header .button_div .upload_div {
+.unicast_container .header .button_div.resetRow {
+   color: #ff5252;
+   border: 1px solid #ff5252;
+}
+
+.unicast_container .header .button_div.addRow {
+   color: #448aff;
+   border: 1px solid #448aff;
+}
+
+.unicast_container .header .button_div.upload_div {
    width: 100%;
    height: 100%;
    display: flex;
@@ -186,8 +188,7 @@ export default {
    border: 1px dashed grey;
 }
 
-.unicast_container .header .button_div .upload_div:hover,
-.unicast_container .header .button_div .button:hover {
+.unicast_container .header .button_div:hover {
    cursor: pointer;
 }
 
@@ -201,11 +202,6 @@ export default {
 .unicast_container .contextInput {
    min-height: unset;
 }
-
-/* .unicast_container .header .button_div .contextInput {
-   min-height: unset;
-   margin: 0px;
-} */
 </style>
 
 <style>

@@ -13,7 +13,7 @@ class ManageMonitoring extends SpinalContextApp {
       super(
          "Manage devices monitoring",
          "Manage devices monitoring", {
-         icon: "video_settings",
+         icon: "personal_video",
          icon_type: "in",
          backgroundColor: "#FF0000",
          fontColor: "#FFFFFF"

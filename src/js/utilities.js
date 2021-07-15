@@ -6,8 +6,10 @@ import { SpinalListenerModel, Spinal, SpinalMonitorInfoModel } from "spinal-mode
 
 const bacnet = require('bacstack');
 
+const SUPERVISION_INTERVAL_TYPE = "supervisionIntervalTime";
 
 export default {
+
 
    async getNetwork(id, contextId) {
       const realNode = SpinalGraphService.getRealNode(id);
@@ -100,7 +102,7 @@ export default {
       const [profilContext] = SpinalGraphService.getContextWithType("deviceProfileContext");
 
       const profils = await SpinalGraphService.getChildren(deviceId, ["hasBacnetProfile"]);
-      const profil = profils[0];
+      const [profil] = profils;
 
       if (profilContext && profil) {
          SpinalGraphService._addNode(profilContext);

@@ -10,30 +10,30 @@
          <md-step
             id="first"
             md-label="Network name"
-            md-description="Network name"
-         >
+            md-description="Network name">
             <div class="stepContainer">
                <div class="header">
                   <div
-                     class="radio"
-                     :class="{'isActive' : network.useBroadcast}"
-                  >
+                     class="radio" 
+                     :class="{ isActive: network.useBroadcast }">
                      <md-radio
                         class="md-primary"
                         v-model="network.useBroadcast"
                         :value="true"
-                     >Broadcast</md-radio>
+                        >Broadcast</md-radio
+                     >
                   </div>
 
                   <div
                      class="radio"
-                     :class="{'isActive' : !network.useBroadcast}"
+                     :class="{ isActive: !network.useBroadcast }"
                   >
                      <md-radio
                         class="md-primary"
                         v-model="network.useBroadcast"
                         :value="false"
-                     >Unicast</md-radio>
+                        >Unicast</md-radio
+                     >
                   </div>
                </div>
 
@@ -47,10 +47,8 @@
                      v-else
                      :network="network"
                   ></unicast-template>
-
                </div>
             </div>
-
          </md-step>
 
          <md-step
@@ -58,7 +56,6 @@
             md-label="Discover network"
             md-description="Discover"
          >
-
             <div class="stepContainer">
                <discover-table
                   :devices="devices"
@@ -73,14 +70,9 @@
 
             <!-- <md-button @click="discover">Discover</md-button>
              -->
-
          </md-step>
 
-         <md-step
-            id="third"
-            md-label="Create network"
-            md-description="Create"
-         >
+         <md-step id="third" md-label="Create network" md-description="Create">
             <div class="stepContainer">
                <div class="loading">
                   <md-progress-spinner
@@ -91,17 +83,17 @@
                   <md-icon
                      v-else-if="state === STATES.created"
                      class="md-size-5x"
-                  >check</md-icon>
+                     >check</md-icon
+                  >
 
                   <md-button
                      v-else
                      :disabled="selected.length === 0"
                      @click="createNodes"
-                  >Create Network</md-button>
-
+                     >Create Network</md-button
+                  >
                </div>
             </div>
-
          </md-step>
       </md-steppers>
    </div>
@@ -154,7 +146,10 @@ export default {
          this.context = params.context.get();
          this.organ = await this.getOrganModel(params.selectedNode.id.get());
 
-         console.log("this.organ", this.organ);
+         if (typeof this.spinalDiscover !== "undefined") {
+            this.spinalDiscover = undefined;
+            this.state = STATES.reseted;
+         }
       },
 
       closed() {},
@@ -168,7 +163,7 @@ export default {
                this.organ
             );
 
-            console.log(this.spinalDiscover);
+            // console.log(this.spinalDiscover);
 
             await this.spinalDiscover.addToGraph();
          }
@@ -186,41 +181,43 @@ export default {
 
       getDevicesFound() {
          this.devicesBindProcess = this.spinalDiscover.state.bind(() => {
-            switch (this.spinalDiscover.state.get()) {
-               case STATES.discovered:
-                  console.log("discovered");
-                  this.state = STATES.discovered;
-                  this.devices = this.spinalDiscover.devices.get();
-                  console.log(this.spinalDiscover.devices.get());
-                  break;
-               case STATES.timeout:
-                  console.log("timeout");
-                  this.state = STATES.timeout;
-                  break;
-               case STATES.discovering:
-                  console.log("discovering...");
-                  this.state = STATES.discovering;
-                  break;
-               case STATES.creating:
-                  console.log("creating...");
-                  this.state = STATES.creating;
-                  break;
-               case STATES.created:
-                  console.log("created...");
-                  this.state = STATES.created;
-                  break;
-               case STATES.error:
-                  console.log("error...");
-                  this.state = STATES.error;
-               case STATES.reseted:
-                  console.log("reset...");
-                  this.state = STATES.reseted;
-                  break;
+            console.log(this.spinalDiscover.state.get());
+            this.state = this.spinalDiscover.state.get();
 
-               default:
-                  break;
+            if (this.state === STATES.discovered) {
+               this.devices = this.spinalDiscover.devices.get();
+            } else if (this.state === STATES.created) {
+               this.spinalDiscover = undefined;
+               // this.state = STATES.reseted;
             }
-            // this.devices = this.graph.info.discover.devices.get();
+
+            // switch (this.spinalDiscover.state.get()) {
+            //    case STATES.discovered:
+            //       this.state = STATES.discovered;
+            //       this.devices = this.spinalDiscover.devices.get();
+            //       break;
+            //    case STATES.timeout:
+            //       this.state = STATES.timeout;
+            //       break;
+            //    case STATES.discovering:
+            //       this.state = STATES.discovering;
+            //       break;
+            //    case STATES.creating:
+            //       this.state = STATES.creating;
+            //       break;
+            //    case STATES.created:
+            //       this.state = STATES.created;
+            //       break;
+            //    case STATES.error:
+            //       this.state = STATES.error;
+            //    case STATES.reseted:
+            //       this.state = STATES.reseted;
+            //       break;
+
+            //    default:
+            //       break;
+            // }
+            // // this.devices = this.graph.info.discover.devices.get();
          });
       },
 
@@ -283,9 +280,7 @@ export default {
       "network.port": function () {
          this.stopDiscovering();
       },
-      // "network.name": function () {
-      //    this.stopDiscovering();
-      // },
+
       "network.ips": function () {
          this.stopDiscovering();
       },
@@ -295,7 +290,6 @@ export default {
    },
 };
 </script>
-
 
 <style scoped>
 .discover_container {
