@@ -75,7 +75,9 @@ export default {
                listener: new Ptr(spinalListener)
             })
          }
-      } catch (error) { }
+      } catch (error) { 
+         console.error(error);
+      }
 
    },
 
@@ -100,20 +102,20 @@ export default {
 
    async getMonitoringInfo(deviceId, contextId) {
       const [profilContext] = SpinalGraphService.getContextWithType("deviceProfileContext");
-
       const profils = await SpinalGraphService.getChildren(deviceId, ["hasBacnetProfile"]);
       const [profil] = profils;
 
+
       if (profilContext && profil) {
          SpinalGraphService._addNode(profilContext);
-
          const intervalsNodes = await SpinalGraphService.findInContext(profil.id.get(), profilContext.getId().get(), (node) => {
-            if (node.getType().get() === "deviceMonitoringIntervalTime") {
+            if (node.getType().get() === "supervisionIntervalTime") {
                SpinalGraphService._addNode(node);
                return true;
             }
             return false;
          })
+
          const promises = intervalsNodes.map(async el => {
             return {
                monitoring: await this.getSharedAttribute(el),
@@ -130,6 +132,7 @@ export default {
                }
             })
 
+
             const profilNode = SpinalGraphService.getRealNode(profil.id.get());
 
             return new SpinalMonitorInfoModel(profilNode, data);
@@ -142,7 +145,7 @@ export default {
 
    async getSharedAttribute(intervalNode) {
       const realNode = SpinalGraphService.getRealNode(intervalNode.id.get());
-      const cat = await serviceDocumentation.getCategoryByName(realNode, "Monitoring");
+      const cat = await serviceDocumentation.getCategoryByName(realNode, "Supervision");
       const obj = {}
       if (cat.element != undefined) {
          for (let i = 0; i < cat.element.length; i++) {
@@ -156,9 +159,10 @@ export default {
    async getEndpointsObjectIds(intervalNode, profilContextId, bmsContextId) {
       const nodeId = intervalNode.id.get();
       const profilItems = await SpinalGraphService.getChildrenInContext(nodeId, profilContextId);
+
       const promises = profilItems.map(async profilItem => {
 
-         return { instance: parseInt(profilItem.IDX.get()) + 1, type: this._getBacnetObjectType(profilItem.type.get()) }
+         return { instance: await this.getIDX(profilItem.id.get()), type: this._getBacnetObjectType(profilItem.type.get()) }
       });
 
       return Promise.all(promises).then((result) => {
@@ -185,6 +189,19 @@ export default {
          }
          return false;
       })
+   },
+
+   async getIDX(nodeId) {
+      const realNode = SpinalGraphService.getRealNode(nodeId);
+      const cat = await serviceDocumentation.getCategoryByName(realNode, "default");
+      
+      if (cat.element != undefined) {
+         for (let i = 0; i < cat.element.length; i++) {
+            const element = cat.element[i];
+            if(element.label.get() === "IDX") return parseInt(element.value.get()) + 1;
+         }
+      }
+      
    },
 
 
