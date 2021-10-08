@@ -51,7 +51,7 @@ export default {
          const model = await this.getModel(realNode);
          const monitor = await this.getMonitoringInfo(deviceId, contextId);
 
-         if (model != -1) {
+         if (model && model != -1) {
             if (!monitor) {
                model.listen.set(false);
             } else {
