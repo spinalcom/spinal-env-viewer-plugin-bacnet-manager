@@ -22,7 +22,7 @@
 				class="md-icon-button md-primary"
 				v-tooltip="'restart'"
 				:disabled="disabledRestart()"
-				@click="startMonitoring"
+				@click="restartMonitoring"
 			>
 				<md-icon>replay</md-icon>
 			</md-button>
@@ -93,6 +93,11 @@
 				//    this.model.listen.set(false);
 				// }
 				utilities.stopMonitoring(this.device.id);
+			},
+
+			async restartMonitoring() {
+				await utilities.stopMonitoring(this.device.id);
+				setTimeout(this.startMonitoring.bind(this), 1500);
 			},
 
 			updateTimeSeries(value) {
