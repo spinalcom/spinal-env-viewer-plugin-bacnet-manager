@@ -10,6 +10,8 @@ import addOrganBtn from "./viewer/addOrgan";
 import linkProfilToBmsDevice from "./viewer/linkProfil";
 import unLinkProfilToBmsDevice from "./viewer/unLinkProfil";
 // import linkDeviceToBim from "./viewer/linkDeviceToBim";
+import organBacnetMonitor from "./bacnet/organBacnetMonitor";
+
 
 export {
    discoverNetworkBtn,
@@ -23,5 +25,6 @@ export {
    createBacnetValue,
    // linkDeviceToBim,
    locateBimObject,
-   manageMonitoring
+   manageMonitoring,
+   organBacnetMonitor
 }

@@ -3,7 +3,7 @@ import { SpinalForgeExtention } from "spinal-env-viewer-panel-manager-service_sp
 
 import DiscoverNetworkPanel from "./discoverNetworkPanel.vue";
 import ManageDevicesPanel from "./manageDevicesPanel.vue";
-
+import MonitorConnectorPanel from "./monitorConnectorPanel.vue";
 
 const panels = [
    {
@@ -24,6 +24,19 @@ const panels = [
       vueMountComponent: Vue.extend(ManageDevicesPanel),
       panel: {
          title: "Manage devices monitoring",
+         closeBehaviour: "hide",
+      },
+      style: {
+         minWidth: '620px',
+         height: "670px",
+         left: "400px",
+      },
+   },
+   {
+      name: "monitorConnectorPanel",
+      vueMountComponent: Vue.extend(MonitorConnectorPanel),
+      panel: {
+         title: "Manage connector",
          closeBehaviour: "hide",
       },
       style: {
