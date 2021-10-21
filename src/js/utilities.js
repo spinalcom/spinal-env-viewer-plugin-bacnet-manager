@@ -21,6 +21,7 @@ export default {
 
          });
 
+         SpinalGraphService._addNode(found)
          return found;
       })
    },
@@ -38,9 +39,6 @@ export default {
          if (found) {
             return found.getElement();
          }
-
-         return;
-
       })
    },
 

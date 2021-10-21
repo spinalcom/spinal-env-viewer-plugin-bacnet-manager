@@ -22,7 +22,7 @@ class CreateNetworkContextBtn extends SpinalContextApp {
    }
 
    action(option) {
-      spinalPanelManagerService.openPanel("createGTBNetworkContextDialog", option)
+      spinalPanelManagerService.openPanel("createGTBNetworkContextDialog", option);
    }
 
 }

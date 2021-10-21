@@ -1,14 +1,14 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
-
+import { CONTEXT_TYPE } from "../../js/constants";
 const SIDEBAR = "GraphManagerSideBar";
 
 
 class AddOrganButton extends SpinalContextApp {
    constructor() {
       super(
-         "Add BMS monitoring Organ",
-         "Add BMS monitoring Organ", {
+         "Add Organ",
+         "Add Organ", {
          icon: "add",
          icon_type: "in",
          backgroundColor: "#FF0000",
@@ -19,7 +19,7 @@ class AddOrganButton extends SpinalContextApp {
 
    isShown(option) {
       const selectedType = option.selectedNode.type.get();
-      return Promise.resolve(selectedType === "Network" ? true : -1);
+      return Promise.resolve(selectedType === CONTEXT_TYPE ? true : -1);
    }
 
    action(option) {

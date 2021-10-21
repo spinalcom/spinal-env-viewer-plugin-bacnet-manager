@@ -1,6 +1,6 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
-import { SpinalOrganConfigModel } from "spinal-model-bacnet";
+import { SpinalOrganConfigModel, BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
 
 
 const SIDEBAR = "GraphManagerSideBar";
@@ -22,7 +22,7 @@ class MonitorConnectorBtn extends SpinalContextApp {
    isShown(option) {
       let typeSelected = option.selectedNode.type.get();
 
-      return Promise.resolve(typeSelected === SpinalOrganConfigModel.TYPE ? true : -1);
+      return Promise.resolve(typeSelected === BACNET_ORGAN_TYPE ? true : -1);
    }
 
    action(option) {
