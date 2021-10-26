@@ -12,7 +12,7 @@ import unLinkProfilToBmsDevice from "./viewer/unLinkProfil";
 
 import createBacnetValue from "./bacnet/createBacnetValue";
 import manageMonitoring from "./bacnet/monitoring";
-
+import createPcvueNetwork from "./pcvue/createNetwork";
 import organBacnetMonitor from "./bacnet/organBacnetMonitor";
 
 
@@ -30,5 +30,6 @@ export {
 
    createBacnetValue,
    manageMonitoring,
-   organBacnetMonitor
+   organBacnetMonitor,
+   createPcvueNetwork
 }

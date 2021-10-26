@@ -1,9 +1,10 @@
 import Vue from "vue";
 import { SpinalForgeExtention } from "spinal-env-viewer-panel-manager-service_spinalforgeextention";
 
-import DiscoverNetworkPanel from "./discoverNetworkPanel.vue";
-import ManageDevicesPanel from "./manageDevicesPanel.vue";
-import MonitorConnectorPanel from "./monitorConnectorPanel.vue";
+import DiscoverNetworkPanel from "./bacnet/discoverNetworkPanel.vue";
+import ManageDevicesPanel from "./bacnet/manageDevicesPanel.vue";
+import MonitorConnectorPanel from "./bacnet/monitorConnectorPanel.vue";
+import CreatePCVueNetworkPanel from "./pcvue/createPCVueNetwork.vue";
 
 const panels = [
    {
@@ -37,6 +38,18 @@ const panels = [
       vueMountComponent: Vue.extend(MonitorConnectorPanel),
       panel: {
          title: "Manage connector",
+         closeBehaviour: "hide",
+      },
+      style: {
+         minWidth: '620px',
+         height: "670px",
+         left: "400px",
+      },
+   }, {
+      name : "createPCVueNetworkPanel",
+      vueMountComponent: Vue.extend(CreatePCVueNetworkPanel),
+      panel: {
+         title: "Create PCVue Network",
          closeBehaviour: "hide",
       },
       style: {

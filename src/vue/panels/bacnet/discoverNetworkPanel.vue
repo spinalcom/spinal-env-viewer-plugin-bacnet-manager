@@ -102,16 +102,17 @@
 </template>
 
 <script>
-	import { NETWORK_TYPE } from "../../js/constants";
-	import discoverTable from "../components/discoverTable.vue";
+	import { STATES, SpinalDisoverModel } from "spinal-model-bacnet";
+	import { SpinalGraphService } from "spinal-env-viewer-graph-service";
+
+	import { NETWORK_TYPE } from "../../../js/constants";
+	import discoverTable from "../../components/discoverTable.vue";
 	// import { STATES } from "../../js/stateEnum";
 
 	// import { SpinalDisoverModel } from "../../model/SpinalDiscoverModel";
 
-	import { STATES, SpinalDisoverModel } from "spinal-model-bacnet";
-	import { SpinalGraphService } from "spinal-env-viewer-graph-service";
-	import BroadcastTemplate from "../components/broadcastTemplate.vue";
-	import UnicastTemplate from "../components/unicastTemplate.vue";
+	import BroadcastTemplate from "../../components/broadcastTemplate.vue";
+	import UnicastTemplate from "../../components/unicastTemplate.vue";
 
 	export default {
 		name: "discoverNetworkPanel",

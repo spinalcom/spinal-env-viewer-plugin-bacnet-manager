@@ -1,7 +1,7 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
-import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet/dist";
+import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
 
 import utilities from "../../js/utilities";
 
@@ -33,7 +33,7 @@ class CreateBacnetValue extends SpinalContextApp {
       if(network) {
          const networkId = network.getId().get();
          const organ = await utilities.getOrgan(networkId, contextId);
-         return organ && organ.type.get() ? true : -1;
+         return organ && organ.type.get() === BACNET_ORGAN_TYPE  ? true : -1;
       }
 
       return -1;

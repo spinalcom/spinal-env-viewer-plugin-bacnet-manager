@@ -1,8 +1,10 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
-import { SpinalOrganConfigModel, BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
+import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
 import { SpinalBmsNetwork } from "spinal-model-bmsnetwork";
+
+import utilities from "../../js/utilities";
 
 const SIDEBAR = "GraphManagerSideBar";
 
@@ -23,13 +25,14 @@ class DiscoverNetworkBtn extends SpinalContextApp {
    async isShown(option) {
       const  typeSelected = option.selectedNode.type.get();
       const id = option.selectedNode.id.get();
+      const contextId = option.context.id.get();
 
       if(typeSelected === BACNET_ORGAN_TYPE) return true;
 
       if(typeSelected === SpinalBmsNetwork.nodeTypeName) {
-         const parents = await SpinalGraphService.getParents(id,[SpinalBmsNetwork.relationName]);
-         const found = parents.find(el => el.id.get() === BACNET_ORGAN_TYPE);
-         return found || -1;
+         const organ = await utilities.getOrgan(id, contextId);
+
+         return organ && organ.type.get() == BACNET_ORGAN_TYPE ? true : -1;
       }
       
       

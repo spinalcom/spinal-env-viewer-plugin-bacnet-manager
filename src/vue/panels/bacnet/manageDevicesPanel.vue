@@ -59,8 +59,8 @@
 </template>
 
 <script>
-	import DeviceMonitoring from "../components/monitoring/devicemonitor.vue";
-	import utilities from "../../js/utilities";
+	import DeviceMonitoring from "../../components/monitoring/devicemonitor.vue";
+	import utilities from "../../../js/utilities";
 	const {
 		spinalPanelManagerService,
 	} = require("spinal-env-viewer-panel-manager-service");
