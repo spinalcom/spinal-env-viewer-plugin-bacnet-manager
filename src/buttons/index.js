@@ -1,6 +1,7 @@
 import discoverNetworkBtn from "./bacnet/discoverBtn";
-import startBtn from "./bacnet/resume";
-import stopBtn from "./bacnet/stop";
+// import startBtn from "./bacnet/resume";
+// import stopBtn from "./bacnet/stop";
+
 // import editTimeIntervalBtn from "./bacnet/editTimeInterval";
 // import linkDeviceToBim from "./viewer/linkDeviceToBim";
 import locateBimObject from "./bacnet/locateBimObject";
@@ -18,8 +19,8 @@ import organBacnetMonitor from "./bacnet/organBacnetMonitor";
 export {
    discoverNetworkBtn,
    createNetworkContext,
-   startBtn,
-   stopBtn,
+   // startBtn,
+   // stopBtn,
    // editTimeIntervalBtn,
    addOrganBtn,
    linkProfilToBmsDevice,

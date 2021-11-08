@@ -4,9 +4,10 @@ import {
    spinalPanelManagerService
 } from "spinal-env-viewer-panel-manager-service";
 
-import { SpinalOrganConfigModel } from "spinal-model-bacnet";
+import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 
+import utilities from "../../js/utilities";
 
 const SIDEBAR = "GraphManagerSideBar";
 
@@ -24,10 +25,21 @@ class UnLinkProfilToBmsDevice extends SpinalContextApp {
       );
    }
 
-   isShown(option) {
+   async isShown(option) {
+      const id = option.selectedNode.id.get();
       const type = option.selectedNode.type.get();
-      const display = [SpinalBmsDevice.nodeTypeName, SpinalBmsNetwork.nodeTypeName, SpinalOrganConfigModel.TYPE].indexOf(type) !== -1
-      return Promise.resolve(display ? true : -1);
+      const contextId = option.context.id.get();
+      if(type === BACNET_ORGAN_TYPE) return true;
+
+      let network = type === SpinalBmsNetwork.nodeTypeName ? SpinalGraphService.getRealNode(id) : type === SpinalBmsDevice.nodeTypeName && await utilities.getNetwork(id, contextId);
+
+      if(network) {
+         const networkId = network.getId().get();
+         const organ = await utilities.getOrgan(networkId, contextId);
+         return organ && organ.type.get() === BACNET_ORGAN_TYPE  ? true : -1;
+      }
+
+      return -1;
    }
 
    async action(option) {
