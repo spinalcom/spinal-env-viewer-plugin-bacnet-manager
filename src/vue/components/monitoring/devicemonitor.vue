@@ -95,6 +95,7 @@ export default {
     }
   },
   mounted() {},
+
   methods: {
     async startMonitoring() {
       const deviceId = this.device.id;
@@ -107,16 +108,22 @@ export default {
       }
     },
 
-    stopMonitoring() {
+    async stopMonitoring() {
       // if (this.model != -1 && this.model.listen) {
       //    this.model.listen.set(false);
       // }
-      utilities.stopMonitoring(this.device.id);
+      return utilities.stopMonitoring(this.device.id);
     },
 
     async restartMonitoring() {
+      if (!utilities.hasProfilLinked(this.device.id)) return -1;
       await utilities.stopMonitoring(this.device.id);
-      setTimeout(this.startMonitoring.bind(this), 1500);
+      return new Promise((resolve, reject) => {
+        setTimeout(async () => {
+          await this.startMonitoring();
+          resolve(true);
+        }, 1500);
+      });
     },
 
     updateTimeSeries(value) {
@@ -133,6 +140,7 @@ export default {
     },
 
     disabledStart() {
+      if (!this.hasProfil) return true;
       const model = this.model;
       return model && model !== -1 && model.listen && model.listen.get();
     },
@@ -147,6 +155,9 @@ export default {
       return this.model && this.model.listen && this.model.listen.get()
         ? "Running"
         : "Stopped";
+    },
+    hasProfil() {
+      return utilities.hasProfilLinked(this.device.id);
     },
   },
   watch: {

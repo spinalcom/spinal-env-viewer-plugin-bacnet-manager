@@ -138,50 +138,87 @@ export default {
     ////              CLIKS                   //
     ////////////////////////////////////////////
 
-    startAllMonitoring() {
+    async startAllMonitoring() {
       // const length = this.devices.length;
 
-      this.devices.forEach((device) => {
-        const deviceId = device.id;
-        const [ref] = this.$refs[deviceId];
-        if (ref) {
-          ref.startMonitoring();
-        }
-      });
+      // this.devices.forEach((device) => {
+      //   const deviceId = device.id;
+      //   const [ref] = this.$refs[deviceId];
+      //   if (ref) {
+      //     ref.startMonitoring();
+      //   }
+      // });
+      const references = this.devices
+        .map((el) => (this.$refs[el.id] ? this.$refs[el.id][0] : undefined))
+        .filter((el) => !!el);
+
+      while (references.length > 0) {
+        const refs = references.splice(0, 10);
+        await this.execFunction(refs, (ref) => ref.startMonitoring());
+      }
+
+      // for (const device of this.devices) {
+      //   const deviceId = device.id;
+      //   const [ref] = this.$refs[deviceId];
+      //   if (ref) {
+      //     await ref.startMonitoring();
+      //   }
+      // }
     },
 
-    restartAllMonitoring() {
+    async restartAllMonitoring() {
       // const length = this.devices.length;
 
-      this.devices.forEach((device) => {
-        const deviceId = device.id;
-        const [ref] = this.$refs[deviceId];
-        if (ref) {
-          ref.restartMonitoring();
-        }
-      });
+      // this.devices.forEach((device) => {
+      //   const deviceId = device.id;
+      //   const [ref] = this.$refs[deviceId];
+      //   if (ref) {
+      //     ref.restartMonitoring();
+      //   }
+      // });
+
+      const references = this.devices
+        .map((el) => (this.$refs[el.id] ? this.$refs[el.id][0] : undefined))
+        .filter((el) => !!el);
+
+      while (references.length > 0) {
+        const refs = references.splice(0, 10);
+        await this.execFunction(refs, (ref) => ref.restartMonitoring());
+      }
+
+      // for (const device of this.devices) {
+      //   const deviceId = device.id;
+      //   const [ref] = this.$refs[deviceId];
+      //   if (ref) {
+      //     await ref.restartMonitoring();
+      //   }
+      // }
     },
 
-    stopAllMonitoring() {
-      this.devices.forEach((device) => {
-        const deviceId = device.id;
-        const [ref] = this.$refs[deviceId];
-        if (ref) {
-          ref.stopMonitoring();
-        }
-      });
+    async stopAllMonitoring() {
+      // this.devices.forEach((device) => {
+      //   const deviceId = device.id;
+      //   const [ref] = this.$refs[deviceId];
+      //   if (ref) {
+      //     ref.stopMonitoring();
+      //   }
+      // });
 
-      // const length = this.devices.length;
-      // let index = 0;
+      const references = this.devices
+        .map((el) => (this.$refs[el.id] ? this.$refs[el.id][0] : undefined))
+        .filter((el) => !!el);
 
-      // while (index <= length - 1) {
-      //    const deviceId = this.devices[index].id;
-      //    const [ref] = this.$refs[deviceId];
-      //    if (ref) {
-      //       await ref.stopMonitoring();
-      //    }
+      while (references.length > 0) {
+        const refs = references.splice(0, 10);
+        await this.execFunction(refs, (ref) => ref.stopMonitoring());
+      }
 
-      //    index++;
+      // for (const device of this.devices) {
+      //   const deviceId = device.id;
+      //   const [ref] = this.$refs[deviceId];
+      //   if (ref) {
+      //     await ref.stopMonitoring();
+      //   }
       // }
     },
 
@@ -210,6 +247,11 @@ export default {
       spinalPanelManagerService.panels.manageDevicesPanel.panel.setTitle(
         `Manage devices monitoring : ${title}`
       );
+    },
+
+    execFunction(array, callback) {
+      const promises = array.map((el) => callback(el));
+      return Promise.all(promises);
     },
   },
 };

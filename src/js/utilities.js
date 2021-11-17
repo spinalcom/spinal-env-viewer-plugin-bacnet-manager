@@ -2,6 +2,7 @@ import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalListenerModel, Spinal, SpinalMonitorInfoModel } from "spinal-model-bacnet";
+import { SPINAL_RELATION_PTR_LST_TYPE, SPINAL_RELATION_LST_PTR_TYPE } from "spinal-model-graph";
 
 
 const bacnet = require('bacstack');
@@ -10,7 +11,6 @@ const SUPERVISION_INTERVAL_TYPE = "supervisionIntervalTime";
 
 export default {
 
-
    async getNetwork(id, contextId) {
       const realNode = SpinalGraphService.getRealNode(id);
       return realNode.getParents([SpinalBmsDevice.relationName]).then((parents) => {
@@ -18,7 +18,6 @@ export default {
             if (el && el.contextIds) {
                return el.contextIds[contextId];
             }
-
          });
 
          SpinalGraphService._addNode(found)
@@ -44,8 +43,12 @@ export default {
 
    async startMonitoring(graph, contextId, deviceId) {
       try {
+
+         if(!this.hasProfilLinked(deviceId)) return -1;
+
          const context = SpinalGraphService.getRealNode(contextId);
          const realNode = SpinalGraphService.getRealNode(deviceId);
+
          const model = await this.getModel(realNode);
          const monitor = await this.getMonitoringInfo(deviceId, contextId);
 
@@ -81,6 +84,7 @@ export default {
 
    async stopMonitoring(deviceId) {
       try {
+         if(!this.hasProfilLinked(deviceId)) return -1;
          const realNode = SpinalGraphService.getRealNode(deviceId);
          const model = await this.getModel(realNode);
          if (model != -1) model.listen.set(false);
@@ -201,6 +205,14 @@ export default {
       }
       
    },
+
+   hasProfilLinked(nodeId) {
+      const realNode = SpinalGraphService.getRealNode(nodeId);
+      if(realNode.hasRelation("hasBacnetProfile",SPINAL_RELATION_PTR_LST_TYPE)) return true;
+      if(realNode.hasRelation("hasBacnetProfile",SPINAL_RELATION_LST_PTR_TYPE)) return true;
+
+      return false;
+   }
 
 
 }
