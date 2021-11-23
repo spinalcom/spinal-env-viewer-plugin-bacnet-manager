@@ -72,14 +72,14 @@ with this file. If not, see
 
 <script>
 import utilities from "../../../js/utilities";
-import { monitorState } from "../../../js/monitorState";
+import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 
 export default {
   name: "deviceMonitoring",
   props: {
     device: { required: true },
-    // context: { required: true },
-    // graph: { required: true },
+    context: { required: true },
+    graph: { required: true },
     profilId: { type: String, required: false },
   },
   data() {
@@ -89,61 +89,43 @@ export default {
     };
   },
   async created() {
-    this.model = await utilities.getModel(this.device.id);
+    const realNode = SpinalGraphService.getRealNode(this.device.id);
+    this.model = await utilities.getModel(realNode);
     if (this.model && this.model.saveTimeSeries) {
       this.saveTimeSeries = this.model.saveTimeSeries.get();
     }
   },
+  mounted() {},
 
   methods: {
     async startMonitoring() {
-      this.model = await monitorState.startMonitoring(
-        this.device.id,
-        this.profilId,
-        this.model
-      );
+      const deviceId = this.device.id;
+      const contextId = this.context.id;
 
-      return this.model;
+      await utilities.startMonitoring(this.graph, contextId, deviceId);
 
-      // const deviceId = this.device.id;
-      // const contextId = this.context.id;
-      // await utilities.startMonitoring(this.graph, contextId, deviceId);
       // if (!this.model || this.model === -1) {
       //   const realNode = SpinalGraphService.getRealNode(this.device.id);
       //   this.model = await utilities.getModel(realNode);
       // }
     },
 
-    stopMonitoring() {
-      return monitorState.stopMonitoring(
-        this.device.id,
-        this.profilId,
-        this.model
-      );
-
+    async stopMonitoring() {
       // if (this.model != -1 && this.model.listen) {
       //    this.model.listen.set(false);
       // }
-      // return utilities.stopMonitoring(this.device.id);
+      return utilities.stopMonitoring(this.device.id);
     },
 
     async restartMonitoring() {
-      await this.stopMonitoring();
-      return new Promise((resolve) => {
+      if (!utilities.hasProfilLinked(this.device.id)) return -1;
+      await utilities.stopMonitoring(this.device.id);
+      return new Promise((resolve, reject) => {
         setTimeout(async () => {
-          this.model = await this.startMonitoring();
-          resolve(this.model);
+          await this.startMonitoring();
+          resolve(true);
         }, 1500);
       });
-
-      // if (!utilities.hasProfilLinked(this.device.id)) return -1;
-      // await utilities.stopMonitoring(this.device.id);
-      // return new Promise((resolve, reject) => {
-      //   setTimeout(async () => {
-      //     await this.startMonitoring();
-      //     resolve(true);
-      //   }, 1500);
-      // });
     },
 
     updateTimeSeries(value) {

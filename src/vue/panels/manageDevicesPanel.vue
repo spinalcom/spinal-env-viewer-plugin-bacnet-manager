@@ -56,11 +56,12 @@ with this file. If not, see
         </div>
       </div>
 
-      <div class="devices_list md-scrollbar">
+      <div class="devices_list">
         <device-monitoring v-for="device in devices"
                            :key="device.id"
                            :ref="device.id"
                            :device="device"
+                           :profilId="device.profilId"
                            :context="context"
                            :graph="graph"></device-monitoring>
       </div>
@@ -79,10 +80,14 @@ with this file. If not, see
 
 <script>
 import DeviceMonitoring from "../components/monitoring/devicemonitor.vue";
+import { spinalEventEmitter } from "spinal-env-viewer-plugin-event-emitter";
 import utilities from "../../js/utilities";
+import { monitorState } from "../../js/monitorState";
+
 const {
   spinalPanelManagerService,
 } = require("spinal-env-viewer-panel-manager-service");
+
 export default {
   name: "manageDevicesPanel",
   components: {
@@ -100,28 +105,43 @@ export default {
     this.context;
     this.graph;
     this.selectedNode;
+    this.network;
+    this.organ;
 
     return {
       devices: [],
       pageSelected: this.PAGES.creation,
     };
   },
+  created() {
+    spinalEventEmitter.on("deviceProfileContext-ChangeSupervision", () => {});
+  },
   methods: {
-    async opened(params) {
+    async opened({ context, graph, selectedNode }) {
       this.pageSelected = this.PAGES.loading;
-      this.setPanelTitle(params.selectedNode.name);
+      this.setPanelTitle(selectedNode.name);
+      monitorState.clear();
 
       try {
-        this.context = params.context;
-        this.graph = params.graph;
-        this.selectedNode = params.selectedNode;
+        const [nodeId, contextId] = [selectedNode.id, context.id];
+        this.context = context;
+        this.graph = graph;
+        this.selectedNode = selectedNode;
 
-        this.devices = await this.getBmsDevices(
-          this.context.id,
-          this.selectedNode.id
+        await monitorState.init(graph, contextId, nodeId);
+        const { devices, profilIds } = await this.getBmsDevices(
+          contextId,
+          nodeId
         );
+
+        this.devices = devices;
+        await this.saveProfilIds(profilIds);
+
+        console.log(monitorState);
+
         this.pageSelected = this.PAGES.selection;
       } catch (error) {
+        console.error(error);
         this.pageSelected = this.PAGES.error;
       }
     },
@@ -130,8 +150,32 @@ export default {
 
     async getBmsDevices(contextId, id) {
       return utilities.getBmsDevices(contextId, id).then((devices) => {
-        return devices.map((el) => el.get());
+        const profilIds = new Set([]);
+        const promises = devices.map(async (el) => {
+          const res = el.get();
+          const profile = await utilities.getProfilLinkedToDevice(res.id);
+          if (profile) {
+            const { id } = profile;
+            res.profilId = id;
+            profilIds.add(id);
+          }
+          return res;
+        });
+
+        return Promise.all(promises)
+          .then((devices) => {
+            return {
+              devices,
+              profilIds: Array.from(profilIds),
+            };
+          })
+          .catch((err) => {});
       });
+    },
+
+    saveProfilIds(profilIds) {
+      const promises = profilIds.map((id) => monitorState.addProfile(id));
+      return Promise.resolve(promises);
     },
 
     ////////////////////////////////////////////
@@ -150,23 +194,39 @@ export default {
       // });
       const references = this.devices
         .map((el) => (this.$refs[el.id] ? this.$refs[el.id][0] : undefined))
-        .filter((el) => !!el);
+        .filter((el) => !!el)
+        .map((ref) => {
+          return async () => {
+            const model = await ref.startMonitoring();
+            await utilities.waitModelReady(model);
+          };
+        });
 
-      while (references.length > 0) {
-        const refs = references.splice(0, 10);
-        await this.execFunction(refs, (ref) => ref.startMonitoring());
-      }
+      await utilities.consumeBatch(references, 30);
 
-      // for (const device of this.devices) {
-      //   const deviceId = device.id;
-      //   const [ref] = this.$refs[deviceId];
-      //   if (ref) {
-      //     await ref.startMonitoring();
-      //   }
+      // while (references.length > 0) {
+
+      //   const model = await ref.startMonitoring();
+      //   await utilities.waitModelReady(model);
+
+      //   // await this.execFunction(refs, (ref) => ref.startMonitoring());
+      //   // delay(2000);
       // }
     },
 
     async restartAllMonitoring() {
+      const references = this.devices
+        .map((el) => (this.$refs[el.id] ? this.$refs[el.id][0] : undefined))
+        .filter((el) => !!el)
+        .map((ref) => {
+          return async () => {
+            const model = await ref.restartMonitoring();
+            await utilities.waitModelReady(model);
+          };
+        });
+
+      await utilities.consumeBatch(references, 30);
+
       // const length = this.devices.length;
 
       // this.devices.forEach((device) => {
@@ -177,14 +237,15 @@ export default {
       //   }
       // });
 
-      const references = this.devices
-        .map((el) => (this.$refs[el.id] ? this.$refs[el.id][0] : undefined))
-        .filter((el) => !!el);
+      // const references = this.devices
+      //   .map((el) => (this.$refs[el.id] ? this.$refs[el.id][0] : undefined))
+      //   .filter((el) => !!el);
 
-      while (references.length > 0) {
-        const refs = references.splice(0, 10);
-        await this.execFunction(refs, (ref) => ref.restartMonitoring());
-      }
+      // while (references.length > 0) {
+      //   const refs = references.splice(0, 10);
+      //   await this.execFunction(refs, (ref) => ref.restartMonitoring());
+      //   // delay(2000);
+      // }
 
       // for (const device of this.devices) {
       //   const deviceId = device.id;
