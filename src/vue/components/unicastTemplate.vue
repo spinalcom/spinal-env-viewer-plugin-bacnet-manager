@@ -149,18 +149,6 @@ export default {
       });
 
       if (key) return element[key];
-
-      // const list = [
-      //    "Device ID",
-      //    "DeviceID",
-      //    "deviceID",
-      //    "device ID",
-      //    "deviceId",
-      //    "device Id",
-      // ];
-      // for (const key of list) {
-      //    if (element[key]) return element[key];
-      // }
     },
   },
 };

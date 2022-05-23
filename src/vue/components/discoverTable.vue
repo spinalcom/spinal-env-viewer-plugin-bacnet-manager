@@ -93,6 +93,7 @@ with this file. If not, see
 </template>
 <script>
 import { STATES } from "../../js/stateEnum";
+import { DISCOVERY_METHOD } from "../../js/discoverMethodEnum";
 
 export default {
   name: "discoverTable",
@@ -112,13 +113,18 @@ export default {
   methods: {
     disabledBtn() {
       if (this.network.name.trim().length === 0) return true;
-      if (this.network.useBroadcast) {
-        if (this.network.address.length === 0) return true;
-        if (this.network.port.length === 0) return true;
-      } else {
+      if (this.network.discoverMethod === DISCOVERY_METHOD.broadcast){
+        if (this.network.address.length === 0 || this.network.port.length === 0) return true;
+      }
+      if(this.network.discoverMethod === DISCOVERY_METHOD.unicast){
         if (this.network.ips.length === 0) return true;
       }
-
+      if(this.network.discoverMethod === DISCOVERY_METHOD.api){
+        if (!this.network.port|| this.network.path.length === 0 
+        || this.network.address.length === 0 || this.network.protocol.length === 0){
+          return true;
+        } 
+      }
       return false;
     },
 

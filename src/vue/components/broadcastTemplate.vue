@@ -36,6 +36,10 @@ export default {
    data() {
       return {};
    },
+   mounted () {
+      this.network.address = "255.255.255.255";
+      this.network.port = "47808";
+   },
 };
 </script>
 

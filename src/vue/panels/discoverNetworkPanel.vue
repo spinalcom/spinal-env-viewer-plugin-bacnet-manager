@@ -37,26 +37,40 @@ with this file. If not, see
         <div class="stepContainer">
           <div class="header">
             <div class="radio"
-                 :class="{ isActive: network.useBroadcast }">
+                 :class="{ isActive: network.discoverMethod==0 }">
+                 
               <md-radio class="md-primary"
-                        v-model="network.useBroadcast"
-                        :value="true">Broadcast</md-radio>
+                        v-model="network.discoverMethod"
+                        :value="0">Broadcast</md-radio>
             </div>
 
             <div class="radio"
-                 :class="{ isActive: !network.useBroadcast }">
+                 :class="{ isActive: discoverMethod==1 }">
               <md-radio class="md-primary"
-                        v-model="network.useBroadcast"
-                        :value="false">Unicast</md-radio>
+                        v-model="network.discoverMethod"
+                        :value="1">Unicast</md-radio>
+            </div>
+            <div class="radio"
+                 :class="{ isActive: discoverMethod==2 }">
+              <md-radio class="md-primary"
+                        v-model="network.discoverMethod"
+                        :value="2">Api</md-radio>
             </div>
           </div>
 
           <div class="content">
-            <broadcast-template v-if="network.useBroadcast"
+            <broadcast-template v-if="network.discoverMethod==0"
                                 :network="network"></broadcast-template>
 
-            <unicast-template v-else
+            <unicast-template v-if="network.discoverMethod==1"
                               :network="network"></unicast-template>
+                              
+            <api-template v-if="network.discoverMethod==2"
+                              :network="network"></api-template>
+                              
+            
+
+            
           </div>
         </div>
       </md-step>
@@ -100,7 +114,7 @@ with this file. If not, see
 </template>
 
 <script>
-import { STATES, SpinalDisoverModel } from "spinal-model-bacnet";
+import { STATES,DISCOVERY_METHOD, SpinalDisoverModel, SpinalApiDiscoverModel } from "spinal-model-bacnet";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 
 import { NETWORK_TYPE } from "../../js/constants";
@@ -111,6 +125,7 @@ import discoverTable from "../components/discoverTable.vue";
 
 import BroadcastTemplate from "../components/broadcastTemplate.vue";
 import UnicastTemplate from "../components/unicastTemplate.vue";
+import ApiTemplate from "../components/apiTemplate.vue";
 
 export default {
   name: "discoverNetworkPanel",
@@ -118,10 +133,11 @@ export default {
     "discover-table": discoverTable,
     "broadcast-template": BroadcastTemplate,
     "unicast-template": UnicastTemplate,
+    "api-template": ApiTemplate
   },
   data() {
     this.STATES = STATES;
-
+    this.DISCOVERY_METHOD = DISCOVERY_METHOD;
     this.spinalDiscover;
     this.context;
     this.graph;
@@ -132,13 +148,17 @@ export default {
       devices: [],
       selected: [],
       network: {
-        useBroadcast: true,
+        discoverMethod : DISCOVERY_METHOD.broadcast,
         address: "255.255.255.255",
+        protocol: "http",
+        path:"/",
+        site: "",
         port: 47808,
         name: "",
         type: NETWORK_TYPE,
         ips: [{ id: 0, address: "", deviceId: "" }],
       },
+
     };
   },
   methods: {
@@ -155,20 +175,27 @@ export default {
 
     closed() {},
 
-    async discover() {
-      if (typeof this.spinalDiscover === "undefined") {
+    async discover() { 
+      console.log("entry discover function");
+      if (typeof this.spinalDiscover === "undefined" && this.network.discoverMethod !==2) {
         this.spinalDiscover = new SpinalDisoverModel(
           this.graph,
           this.context,
           this.network,
           this.organ
         );
-
-        // console.log(this.spinalDiscover);
-
-        await this.spinalDiscover.addToGraph();
       }
 
+      if (typeof this.spinalDiscover === "undefined" && this.network.discoverMethod ==2) {
+        this.spinalDiscover = new SpinalApiDiscoverModel(
+          this.graph,
+          this.context,
+          this.network,
+          this.organ
+        );
+        // console.log(this.spinalDiscover);
+      }
+      await this.spinalDiscover.addToGraph();
       this.spinalDiscover.setDiscoveringMode();
       this.getDevicesFound();
     },
@@ -191,34 +218,6 @@ export default {
           this.spinalDiscover = undefined;
           // this.state = STATES.reseted;
         }
-
-        // switch (this.spinalDiscover.state.get()) {
-        //    case STATES.discovered:
-        //       this.state = STATES.discovered;
-        //       this.devices = this.spinalDiscover.devices.get();
-        //       break;
-        //    case STATES.timeout:
-        //       this.state = STATES.timeout;
-        //       break;
-        //    case STATES.discovering:
-        //       this.state = STATES.discovering;
-        //       break;
-        //    case STATES.creating:
-        //       this.state = STATES.creating;
-        //       break;
-        //    case STATES.created:
-        //       this.state = STATES.created;
-        //       break;
-        //    case STATES.error:
-        //       this.state = STATES.error;
-        //    case STATES.reseted:
-        //       this.state = STATES.reseted;
-        //       break;
-
-        //    default:
-        //       break;
-        // }
-        // // this.devices = this.graph.info.discover.devices.get();
       });
     },
 
