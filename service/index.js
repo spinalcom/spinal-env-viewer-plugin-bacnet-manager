@@ -106,6 +106,8 @@ export class SpinalBacnetPluginService {
     return new Promise((resolve, reject) => {
       file.load(async (x) => {
         if (x instanceof SpinalOrganConfigModel) return resolve(x);
+        if (x.type && x.type.get() === SpinalOrganConfigModel.TYPE)
+          return resolve(x);
         x.element.ptr.load((el) => resolve(el));
         //   const element = await x.getElement();
         //   resolve(element);
