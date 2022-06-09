@@ -228,7 +228,7 @@ export default class Utils {
     );
 
     const found = attrs.find((attr) => attr.label.get() === "IDX");
-    if (found) return found.value.get();
+    if (found) return parseInt(found.value.get()) + 1;
 
     // const cat = await serviceDocumentation.getCategoryByName(
     // realNode,
