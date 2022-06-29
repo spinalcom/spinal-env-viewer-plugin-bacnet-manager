@@ -151,9 +151,9 @@ export default {
         discoverMethod : DISCOVERY_METHOD.broadcast,
         address: "255.255.255.255",
         protocol: "http",
-        path:"/",
-        site: "",
-        port: 47808,
+        path:"/enteliweb/api/.bacnet/",
+        site: "Centre Immersion",
+        port: 80,
         name: "",
         type: NETWORK_TYPE,
         ips: [{ id: 0, address: "", deviceId: "" }],
@@ -176,8 +176,9 @@ export default {
     closed() {},
 
     async discover() { 
-      console.log("entry discover function");
+      
       if (typeof this.spinalDiscover === "undefined" && this.network.discoverMethod !==2) {
+        console.log("entry discover function bacnet method");
         this.spinalDiscover = new SpinalDisoverModel(
           this.graph,
           this.context,
@@ -187,6 +188,7 @@ export default {
       }
 
       if (typeof this.spinalDiscover === "undefined" && this.network.discoverMethod ==2) {
+        console.log("entry discover function api method");
         this.spinalDiscover = new SpinalApiDiscoverModel(
           this.graph,
           this.context,

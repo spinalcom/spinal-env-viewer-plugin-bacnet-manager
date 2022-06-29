@@ -88,7 +88,7 @@ export default {
       return {};
    },
    mounted(){
-      this.network.address = "127.0.0.1";
+      this.network.address = "10.0.0.10";
       this.network.port = 80;
    },
 
