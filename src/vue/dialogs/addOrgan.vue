@@ -109,9 +109,7 @@ export default {
     async getOrgans() {
       // const organs = [];
       const connection = spinal.spinalSystem.conn;
-      this.organsDisplayed = await SpinalBacnetPluginService.getOrgans(
-        connection
-      );
+      this.organsDisplayed = await SpinalBacnetPluginService.getOrgans(connection);
       // // spinalCore.load(connection,);
       // spinalCore.load_type(connection, "SpinalOrganConfigModel", (file) => {
       //    // const obj = {

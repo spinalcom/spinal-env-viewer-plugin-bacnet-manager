@@ -1,27 +1,13 @@
 import { spinalCore, FileSystem } from "spinal-core-connectorjs_type";
-import {
-  SpinalGraphService,
-  SPINAL_RELATION_PTR_LST_TYPE,
-} from "spinal-env-viewer-graph-service";
+import { SpinalGraphService, SPINAL_RELATION_PTR_LST_TYPE } from "spinal-env-viewer-graph-service";
 import { SpinalOrganConfigModel } from "spinal-model-bacnet";
 import { SpinalBmsEndpoint } from "spinal-model-bmsnetwork";
-import { v4 as uuidv4 } from "uuid";
+import { SpinalOrganOPCUA } from "spinal-model-opcua";
 
 export class SpinalBacnetPluginService {
-  constructor() {}
+  constructor() { }
 
   static getOrgans(connection) {
-    // console.log("getOrgans called")
-    // const organs = [];
-    // let found = 0;
-    // spinalCore.load_type(connection, "SpinalOrganConfigModel", (file) => {
-    //    console.log("file", file)
-    //    found++;
-    //    organs.push(file)
-    // })
-    // while (organs.length < found) { }
-
-    // return organs;
     const path = "/__users__/admin/organs";
 
     return new Promise((resolve, reject) => {
@@ -34,19 +20,12 @@ export class SpinalBacnetPluginService {
         }
 
         return Promise.all(promises).then((result) => {
-          // for (const element of result) {
-          //    if (!element.id) {
-          //       console.log(element.name.get(), "element.id in undefined");
-          //       element.add_attr({ id: uuidv4() })
-          //    }
-          // }
-          resolve(
-            result.map((organ) => {
-              const id = organ._server_id;
-              const obj = organ.get();
-              obj._server_id = id;
-              return obj;
-            })
+          resolve(result.map((organ) => {
+            const id = organ._server_id;
+            const obj = organ.get();
+            obj._server_id = id;
+            return obj;
+          })
           );
         });
       });
@@ -105,8 +84,8 @@ export class SpinalBacnetPluginService {
   static getFileModel(file) {
     return new Promise((resolve, reject) => {
       file.load(async (x) => {
-        if (x instanceof SpinalOrganConfigModel) return resolve(x);
-        if (x.type && x.type.get() === SpinalOrganConfigModel.TYPE)
+        if (x instanceof SpinalOrganConfigModel || x instanceof SpinalOrganOPCUA) return resolve(x);
+        if (x.type && (x.type.get() === SpinalOrganConfigModel.TYPE || x.type.get() === SpinalOrganOPCUA.TYPE))
           return resolve(x);
         x.element.ptr.load((el) => resolve(el));
         //   const element = await x.getElement();
@@ -128,7 +107,6 @@ export class SpinalBacnetPluginService {
       this.getEndpointsMap(bmsContextId, bmsDeviceId),
       this.getProfilItemsMap(profilId),
     ]).then((result) => {
-      // console.log(result)
     });
   }
 
@@ -164,7 +142,6 @@ export class SpinalBacnetPluginService {
 
   static getProfilItemsMap(profilId) {
     return this.getItemsList(profilId).then((items) => {
-      // console.log(items);
     });
   }
 
