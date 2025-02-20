@@ -2,25 +2,20 @@
    <div class="input_container">
       <div class="input">
          <md-field class="contextInput">
-            <label>Address</label>
+            <label>Device ip address</label>
             <md-input v-model="item.address"></md-input>
          </md-field>
       </div>
 
-      <div class="input">
+      <!-- <div class="input">
          <md-field class="contextInput">
             <label>Device ID</label>
             <md-input v-model="item.deviceId"></md-input>
          </md-field>
-      </div>
+      </div> -->
 
       <div class="remove">
-         <md-button
-            v-if="item.id"
-            class="md-icon-button md-accent"
-            v-tooltip="'remove'"
-            @click="removeItem"
-         >
+         <md-button v-if="item.id" class="md-icon-button md-accent" v-tooltip="'remove'" @click="removeItem">
             <md-icon>remove_circle_outline</md-icon>
          </md-button>
       </div>
@@ -52,7 +47,8 @@ export default {
 }
 
 .input_container .input {
-   width: 40%;
+   /* width: 40%; */
+   width: 100%;
 }
 
 .input_container .remove {

@@ -31,67 +31,44 @@ with this file. If not, see
 
       <md-button @click="discover">Discover</md-button> -->
     <md-steppers md-vertical>
-      <md-step id="first"
-               md-label="Network name"
-               md-description="Network name">
+      <md-step id="first" md-label="Network name" md-description="Network name">
         <div class="stepContainer">
           <div class="header">
-            <div class="radio"
-                 :class="{ isActive: network.useBroadcast }">
-              <md-radio class="md-primary"
-                        v-model="network.useBroadcast"
-                        :value="true">Broadcast</md-radio>
+            <div class="radio" :class="{ isActive: network.useBroadcast }">
+              <md-radio class="md-primary" v-model="network.useBroadcast" :value="true">Broadcast</md-radio>
             </div>
 
-            <div class="radio"
-                 :class="{ isActive: !network.useBroadcast }">
-              <md-radio class="md-primary"
-                        v-model="network.useBroadcast"
-                        :value="false">Unicast</md-radio>
+            <div class="radio" :class="{ isActive: !network.useBroadcast }">
+              <md-radio class="md-primary" v-model="network.useBroadcast" :value="false">Unicast</md-radio>
             </div>
           </div>
 
           <div class="content">
-            <broadcast-template v-if="network.useBroadcast"
-                                :network="network"></broadcast-template>
+            <broadcast-template v-if="network.useBroadcast" :network="network"></broadcast-template>
 
-            <unicast-template v-else
-                              :network="network"></unicast-template>
+            <unicast-template v-else :network="network"></unicast-template>
           </div>
         </div>
       </md-step>
 
-      <md-step id="second"
-               md-label="Discover network"
-               md-description="Discover">
+      <md-step id="second" md-label="Discover network" md-description="Discover">
         <div class="stepContainer">
-          <discover-table :devices="devices"
-                          :state="state"
-                          :selected="selected"
-                          :network="network"
-                          @discover="discover"
-                          @select="selectDevice"
-                          @stop="stopDiscovering"></discover-table>
+          <discover-table :devices="devices" :state="state" :selected="selected" :network="network" @discover="discover"
+            @select="selectDevice" @stop="stopDiscovering"></discover-table>
         </div>
 
         <!-- <md-button @click="discover">Discover</md-button>
              -->
       </md-step>
 
-      <md-step id="third"
-               md-label="Create network"
-               md-description="Create">
+      <md-step id="third" md-label="Create network" md-description="Create">
         <div class="stepContainer">
           <div class="loading">
-            <md-progress-spinner v-if="state === STATES.creating"
-                                 md-mode="indeterminate"></md-progress-spinner>
+            <md-progress-spinner v-if="state === STATES.creating" md-mode="indeterminate"></md-progress-spinner>
 
-            <md-icon v-else-if="state === STATES.created"
-                     class="md-size-5x">check</md-icon>
+            <md-icon v-else-if="state === STATES.created" class="md-size-5x">check</md-icon>
 
-            <md-button v-else
-                       :disabled="selected.length === 0"
-                       @click="createNodes">Create Network</md-button>
+            <md-button v-else :disabled="selected.length === 0" @click="createNodes">Create Network</md-button>
           </div>
         </div>
       </md-step>
@@ -137,7 +114,8 @@ export default {
         port: 47808,
         name: "",
         type: NETWORK_TYPE,
-        ips: [{ id: 0, address: "", deviceId: "" }],
+        // ips: [{ id: 0, address: "", deviceId: "" }],
+        ips: [{ id: 0, address: "" }],
       },
     };
   },
@@ -153,7 +131,7 @@ export default {
       }
     },
 
-    closed() {},
+    closed() { },
 
     async discover() {
       if (typeof this.spinalDiscover === "undefined") {
@@ -345,18 +323,11 @@ export default {
 <style>
 .discover_container .md-steppers.md-theme-default,
 .discover_container .md-steppers.md-theme-default .md-steppers-wrapper,
-.discover_container
-  .md-steppers.md-theme-default
-  .md-steppers-wrapper
-  .md-steppers-container {
+.discover_container .md-steppers.md-theme-default .md-steppers-wrapper .md-steppers-container {
   height: 100%;
 }
 
-.discover_container
-  .md-steppers.md-theme-default
-  .md-steppers-wrapper
-  .md-steppers-container
-  .md-stepper-content.md-active {
+.discover_container .md-steppers.md-theme-default .md-steppers-wrapper .md-steppers-container .md-stepper-content.md-active {
   min-height: 250px;
   max-height: 350px;
 }

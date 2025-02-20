@@ -23,36 +23,29 @@ with this file. If not, see
 -->
 
 <template>
-  <div class="unicast_container"
-       v-if="!isLoading">
+  <div class="unicast_container" v-if="!isLoading">
     <md-field class="contextInput">
       <label>Network Name</label>
       <md-input v-model="network.name"></md-input>
     </md-field>
 
     <div class="header">
-      <div class="button_div addRow"
-           @click="addRow">add row</div>
+      <div class="button_div addRow" @click="addRow">add row</div>
 
-      <div class="button_div resetRow"
-           @click="reset">reset</div>
+      <div class="button_div resetRow" @click="reset">reset</div>
 
-      <div class="button_div upload_div"
-           @click="uploadFile">
+      <div class="button_div upload_div" @click="uploadFile">
         click to upload file
       </div>
     </div>
 
     <md-content class="content md-scrollbar">
-      <input-data-template v-for="item in network.ips"
-                           :key="item.id"
-                           :item="item"
-                           @remove="removeItem"></input-data-template>
+      <input-data-template v-for="item in network.ips" :key="item.id" :item="item"
+        @remove="removeItem"></input-data-template>
     </md-content>
   </div>
 
-  <div class="loading"
-       v-else>
+  <div class="loading" v-else>
     <md-progress-spinner md-mode="indeterminate"></md-progress-spinner>
   </div>
 </template>
@@ -77,12 +70,14 @@ export default {
       const id = this.network.ips.length;
       this.network.ips = [
         ...this.network.ips,
-        { id: id, address: "", deviceId: "" },
+        { id: id, address: "" }
+        // { id: id, address: "", deviceId: "" },
       ];
     },
 
     reset() {
-      this.network.ips = [{ id: 0, address: "", deviceId: "" }];
+      // this.network.ips = [{ id: 0, address: "", deviceId: "" }];
+      this.network.ips = [{ id: 0, address: "" }];
     },
 
     removeItem(id) {
@@ -103,24 +98,12 @@ export default {
 
           try {
             const file = event.target.files[0];
-            const dataJson = await spinalExcelManager.convertExcelToJson(file);
-            const ips = [];
-
-            for (const key in dataJson) {
-              if (Object.hasOwnProperty.call(dataJson, key)) {
-                const data = dataJson[key].map((element) => {
-                  return {
-                    address: this.getElementAddress(element),
-                    deviceId: this.getElementDeviceId(element),
-                  };
-                });
-                ips.push(...data);
-              }
-            }
+            const ips = await this.convertFileDataToJson(file);
             this.network.ips = ips.map((el, index) => {
               el.id = index;
               return el;
             });
+
             this.isLoading = false;
           } catch (error) {
             this.isLoading = false;
@@ -128,6 +111,24 @@ export default {
         },
         false
       );
+    },
+
+    async convertFileDataToJson(file) {
+      const dataJson = await spinalExcelManager.convertExcelToJson(file);
+      const ips = [];
+
+      for (const key in dataJson) {
+        if (Object.hasOwnProperty.call(dataJson, key)) {
+          const data = dataJson[key].map((element) => {
+            return {
+              address: this.getElementAddress(element),
+              // deviceId: this.getElementDeviceId(element),
+            };
+          });
+          ips.push(...data);
+        }
+      }
+      return ips;
     },
 
     getElementAddress(element) {
