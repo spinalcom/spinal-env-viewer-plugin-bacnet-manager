@@ -305,26 +305,13 @@ export default class Utils {
     return listenerModel;
   }
 
-  static _createListenerModel(
-    graph,
-    context,
-    network,
-    organ,
-    deviceNode,
-    monitoringInfo
-  ) {
-    const spinalListener = new SpinalListenerModel(
-      graph,
-      context,
-      network,
-      deviceNode,
-      organ,
-      monitoringInfo
-    );
+  static async _createListenerModel(graph, context, network, organ, deviceNode, monitoringInfo) {
+    const spinalListener = new SpinalListenerModel(graph, context, network, deviceNode, organ, monitoringInfo);
 
-    deviceNode.info.add_attr({
-      listener: new Ptr(spinalListener),
-    });
+    await spinalListener.addToGraph();
+    // deviceNode.info.add_attr({
+    //   listener: new Ptr(spinalListener),
+    // });
 
     return spinalListener;
   }

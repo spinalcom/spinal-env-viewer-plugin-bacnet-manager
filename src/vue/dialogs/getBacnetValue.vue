@@ -1,102 +1,52 @@
 <template>
-   <md-dialog
-      class="mdDialogContainer"
-      :md-active.sync="showDialog"
-      @md-closed="closeDialog(false)"
-   >
+   <md-dialog class="mdDialogContainer" :md-active.sync="showDialog" @md-closed="closeDialog(false)">
       <md-dialog-title class="dialogTitle">Get Bacnet Value</md-dialog-title>
       <md-dialog-content class="content">
 
-         <div
-            class="itemList"
-            v-if="pageSelected === PAGES.selection"
-         >
-            <div
-               class="itemList-item"
-               v-for="item in sensor_types"
-               :key="item.id"
-            >
-               <md-checkbox
-                  class="md-primary"
-                  v-model="item.checked"
-               />
-               <!-- :value="item.checked" -->
-               <span class="md-list-item-text">{{item.name}}</span>
+         <div class="itemList" v-if="pageSelected === PAGES.selection">
+            <div class="itemList-item" v-for="item in sensor_types" :key="item.id">
+               <md-checkbox class="md-primary" v-model="item.checked" />
+               <span class="md-list-item-text">{{ item.name }}</span>
             </div>
          </div>
 
-         <div
-            class="devicesProgress"
-            v-else-if="pageSelected === PAGES.creation"
-         >
+         <div class="devicesProgress" v-else-if="pageSelected === PAGES.creation">
 
-            <div
-               class="device"
-               v-for="device in nodes"
-               :key="device.id"
-            >
-               <div class="name">{{device.info.name}}</div>
-               <div
-                  class="progress-bar"
-                  v-if="device.progress != -1"
-               >
+            <div class="device" v-for="device in nodes" :key="device.id">
+               <div class="name">{{ device.info.name }}</div>
+               <div class="progress-bar" v-if="device.progress != -1">
                   <div class="progress-value">
-                     <md-progress-bar
-                        md-mode="buffer"
-                        :md-value="device.progress"
-                     ></md-progress-bar>
+                     <md-progress-bar md-mode="buffer" :md-value="device.progress"></md-progress-bar>
                   </div>
 
-                  <div class="progress-number">{{device.progress}} %</div>
+                  <div class="progress-number">{{ device.progress }} %</div>
                </div>
 
-               <div
-                  class="progress-bar"
-                  v-else
-               >
-                  <div
-                     class="message"
-                     :class="device.message.id"
-                  >{{device.message.text}}</div>
+               <div class="progress-bar" v-else>
+                  <div class="message" :class="device.message.id">{{ device.message.text }}</div>
                </div>
             </div>
 
          </div>
 
-         <div
-            class="state"
-            v-else-if="pageSelected === PAGES.loading"
-         >
+         <div class="state" v-else-if="pageSelected === PAGES.loading">
             <md-progress-spinner md-mode="indeterminate"></md-progress-spinner>
          </div>
 
-         <div
-            class="state"
-            v-else-if="pageSelected === PAGES.success"
-         >
+         <div class="state" v-else-if="pageSelected === PAGES.success">
             <md-icon class="md-size-5x">done</md-icon>
          </div>
 
-         <div
-            class="state"
-            v-else-if="pageSelected === PAGES.error"
-         >
+         <div class="state" v-else-if="pageSelected === PAGES.error">
             <md-icon class="md-size-5x">error_outline</md-icon>
          </div>
 
       </md-dialog-content>
 
       <md-dialog-actions>
-         <md-button
-            class="md-primary"
-            @click="closeDialog(false)"
-         >Close</md-button>
+         <md-button class="md-primary" @click="closeDialog(false)">Close</md-button>
 
-         <md-button
-            class="md-primary"
-            :disabled='disabled()'
-            @click="getBacnetValue"
-         >GET Bacnet</md-button>
+         <md-button class="md-primary" :disabled='disabled()' @click="getBacnetValue">GET Bacnet</md-button>
       </md-dialog-actions>
    </md-dialog>
 </template>
@@ -128,6 +78,7 @@ export default {
 
       return {
          sensor_types: Object.assign([], SENSOR_TYPES),
+         useFragment: false,
          pageSelected: this.PAGES.creation,
          showDialog: true,
          nodes: undefined,
@@ -185,6 +136,7 @@ export default {
             .filter((el) => el.checked)
             .map((el) => el.value);
 
+
          const iterator = [...this.nodes];
          const organ = await this._getOrgan(this.network);
 
@@ -192,7 +144,7 @@ export default {
       },
 
       createValue(iterator, sensors, organ) {
-         console.log("inside createValue...");
+         console.log("inside createValue...", iterator, sensors, organ);
          const value = iterator.shift();
 
          if (value && this.showDialog) {
@@ -209,7 +161,7 @@ export default {
             );
 
             console.log("model", model);
-            model.addToNode();
+            model.addToGraph();
             let progressProcess;
 
             const modelProcess = model.state.bind(() => {
@@ -377,6 +329,7 @@ export default {
    text-overflow: ellipsis;
    white-space: nowrap;
 }
+
 .mdDialogContainer .content .devicesProgress .device .progress-bar {
    width: 30%;
    display: flex;
@@ -388,47 +341,24 @@ export default {
    text-align: center;
 }
 
-.mdDialogContainer
-   .content
-   .devicesProgress
-   .device
-   .progress-bar
-   .message.waiting {
+.mdDialogContainer .content .devicesProgress .device .progress-bar .message.waiting {
    color: grey;
 }
-.mdDialogContainer
-   .content
-   .devicesProgress
-   .device
-   .progress-bar
-   .message.success {
+
+.mdDialogContainer .content .devicesProgress .device .progress-bar .message.success {
    color: green;
 }
-.mdDialogContainer
-   .content
-   .devicesProgress
-   .device
-   .progress-bar
-   .message.error {
+
+.mdDialogContainer .content .devicesProgress .device .progress-bar .message.error {
    color: #ff5252;
 }
 
-.mdDialogContainer
-   .content
-   .devicesProgress
-   .device
-   .progress-bar
-   .progress-number {
+.mdDialogContainer .content .devicesProgress .device .progress-bar .progress-number {
    width: 25%;
    text-align: center;
 }
 
-.mdDialogContainer
-   .content
-   .devicesProgress
-   .device
-   .progress-bar
-   .progress-value {
+.mdDialogContainer .content .devicesProgress .device .progress-bar .progress-value {
    width: 75%;
 }
 
