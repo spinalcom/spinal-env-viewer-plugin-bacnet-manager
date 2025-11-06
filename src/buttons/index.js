@@ -14,11 +14,12 @@ import unLinkProfilToBmsDevice from "./viewer/unLinkProfil";
 import createBacnetValue from "./bacnet/createBacnetValue";
 import manageMonitoring from "./bacnet/monitoring";
 import organBacnetMonitor from "./bacnet/organBacnetMonitor";
-
+import createSubNetworkBtn from "./bacnet/createSubNetwork";
 
 export {
    discoverNetworkBtn,
    createNetworkContext,
+   createSubNetworkBtn,
    // startBtn,
    // stopBtn,
    // editTimeIntervalBtn,

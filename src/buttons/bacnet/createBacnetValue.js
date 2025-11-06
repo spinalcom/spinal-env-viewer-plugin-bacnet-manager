@@ -30,10 +30,10 @@ class CreateBacnetValue extends SpinalContextApp {
 
       let network = type === SpinalBmsNetwork.nodeTypeName ? SpinalGraphService.getRealNode(id) : type === SpinalBmsDevice.nodeTypeName && await utilities.getNetwork(id, contextId);
 
-      if(network) {
+      if (network) {
          const networkId = network.getId().get();
          const organ = await utilities.getOrgan(networkId, contextId);
-         return organ && organ.type.get() === BACNET_ORGAN_TYPE  ? true : -1;
+         return organ && organ.type.get() === BACNET_ORGAN_TYPE ? true : -1;
       }
 
       return -1;
