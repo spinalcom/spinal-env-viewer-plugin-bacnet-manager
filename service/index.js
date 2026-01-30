@@ -3,6 +3,7 @@ import { SpinalGraphService, SPINAL_RELATION_PTR_LST_TYPE } from "spinal-env-vie
 import { SpinalOrganConfigModel } from "spinal-model-bacnet";
 import { SpinalBmsEndpoint } from "spinal-model-bmsnetwork";
 import { SpinalOrganOPCUA } from "spinal-model-opcua";
+import { SpinalOrganSNMP } from "spinal-model-snmp";
 
 export class SpinalBacnetPluginService {
   constructor() { }
@@ -84,9 +85,13 @@ export class SpinalBacnetPluginService {
   static getFileModel(file) {
     return new Promise((resolve, reject) => {
       file.load(async (x) => {
-        if (x instanceof SpinalOrganConfigModel || x instanceof SpinalOrganOPCUA) return resolve(x);
-        if (x.type && (x.type.get() === SpinalOrganConfigModel.TYPE || x.type.get() === SpinalOrganOPCUA.TYPE))
-          return resolve(x);
+        // if the model is already loaded
+        if (x instanceof SpinalOrganConfigModel || x instanceof SpinalOrganOPCUA || x instanceof SpinalOrganSNMP) return resolve(x);
+
+        // 
+        const types = [SpinalOrganConfigModel.TYPE, SpinalOrganOPCUA.TYPE, SpinalOrganSNMP.TYPE];
+        if (x.type && (types.includes(x.type.get()))) return resolve(x);
+
         x.element.ptr.load((el) => resolve(el));
         //   const element = await x.getElement();
         //   resolve(element);

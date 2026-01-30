@@ -24,55 +24,39 @@ with this file. If not, see
 
 <template>
   <div class="manage_panel_container">
-    <div class="manage_container"
-         v-if="pageSelected === PAGES.selection">
+    <div class="manage_container" v-if="pageSelected === PAGES.selection">
       <div class="header">
         <div>
-          <md-button class="md-icon-button"
-                     v-tooltip="'start all devices'"
-                     @click="startAllMonitoring">
+          <md-button class="md-icon-button" v-tooltip="'start all devices'" @click="startAllMonitoring">
             <md-icon class="md-primary">play_arrow</md-icon>
           </md-button>
 
-          <md-button class="md-icon-button"
-                     v-tooltip="'restart all devices'"
-                     @click="restartAllMonitoring">
+          <md-button class="md-icon-button" v-tooltip="'restart all devices'" @click="restartAllMonitoring">
             <md-icon class="md-primary">replay</md-icon>
           </md-button>
 
-          <md-button class="md-icon-button md-accent"
-                     v-tooltip="'stop all devices'"
-                     @click="stopAllMonitoring">
+          <md-button class="md-icon-button md-accent" v-tooltip="'stop all devices'" @click="stopAllMonitoring">
             <md-icon class="md-accent">stop</md-icon>
           </md-button>
 
-          <md-button class="md-primary"
-                     @click="changeTimeSeries(true)">Save all time series
+          <md-button class="md-primary" @click="changeTimeSeries(true)">Save all time series
           </md-button>
 
-          <md-button class="md-accent"
-                     @click="changeTimeSeries(false)">Stop saving all time
+          <md-button class="md-accent" @click="changeTimeSeries(false)">Stop saving all time
             series</md-button>
         </div>
       </div>
 
       <div class="devices_list">
-        <device-monitoring v-for="device in devices"
-                           :key="device.id"
-                           :ref="device.id"
-                           :device="device"
-                           :profilId="device.profilId"
-                           :context="context"
-                           :graph="graph"></device-monitoring>
+        <device-monitoring v-for="device in devices" :key="device.id" :ref="device.id" :device="device"
+          :profilId="device.profilId" :context="context" :graph="graph"></device-monitoring>
       </div>
     </div>
-    <div class="state"
-         v-else-if="pageSelected === PAGES.loading">
+    <div class="state" v-else-if="pageSelected === PAGES.loading">
       <md-progress-spinner md-mode="indeterminate"></md-progress-spinner>
     </div>
 
-    <div class="state"
-         v-else-if="pageSelected === PAGES.error">
+    <div class="state" v-else-if="pageSelected === PAGES.error">
       <md-icon class="md-size-5x">close</md-icon>
     </div>
   </div>
@@ -114,7 +98,7 @@ export default {
     };
   },
   created() {
-    spinalEventEmitter.on("deviceProfileContext-ChangeSupervision", () => {});
+    spinalEventEmitter.on("deviceProfileContext-ChangeSupervision", () => { });
   },
   methods: {
     async opened({ context, graph, selectedNode }) {
@@ -146,7 +130,7 @@ export default {
       }
     },
 
-    closed() {},
+    closed() { },
 
     async getBmsDevices(contextId, id) {
       return utilities.getBmsDevices(contextId, id).then((devices) => {
@@ -169,7 +153,7 @@ export default {
               profilIds: Array.from(profilIds),
             };
           })
-          .catch((err) => {});
+          .catch((err) => { });
       });
     },
 
@@ -337,7 +321,7 @@ export default {
   border-bottom: 1px solid grey;
 }
 
-.manage_panel_container .manage_container .header > div {
+.manage_panel_container .manage_container .header>div {
   width: 100%;
   float: right;
   display: flex;
