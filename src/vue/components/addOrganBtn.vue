@@ -23,24 +23,18 @@ with this file. If not, see
 -->
 
 <template>
-  <md-button v-if="isFound && !isLinked"
-             class="md-icon-button md-primary"
-             v-tooltip="'create and Link Node'"
-             @click="createAndLinkNode">
+  <md-button v-if="isFound && !isLinked" class="md-icon-button md-primary" v-tooltip="'create and Link Node'"
+    @click="createAndLinkNode">
     <md-icon>drive_file_rename_outline</md-icon>
   </md-button>
 
-  <md-button v-else-if="isFound && isLinked"
-             class="md-icon-button md-accent"
-             v-tooltip="'Remove and unlink Node'"
-             @click="removeAndUnlinkNode">
+  <md-button v-else-if="isFound && isLinked" class="md-icon-button md-accent" v-tooltip="'Remove and unlink Node'"
+    @click="removeAndUnlinkNode">
     <md-icon>delete</md-icon>
   </md-button>
 
   <md-button v-else>
-    <md-progress-spinner :md-diameter="30"
-                         :md-stroke="3"
-                         md-mode="indeterminate"></md-progress-spinner>
+    <md-progress-spinner :md-diameter="30" :md-stroke="3" md-mode="indeterminate"></md-progress-spinner>
   </md-button>
 </template>
 
@@ -61,13 +55,9 @@ export default {
     };
   },
   mounted() {
-    SpinalBacnetPluginService.isReferencedInContext(
-      this.server_id,
-      this.contextId
-    ).then((isLinked) => {
-      this.isFound = true;
-      this.isLinked = isLinked;
-    });
+    const isLinked = SpinalBacnetPluginService.isReferencedInContext(this.server_id, this.contextId);
+    this.isFound = true;
+    this.isLinked = isLinked;
   },
   methods: {
     createAndLinkNode() {
@@ -79,5 +69,4 @@ export default {
   },
 };
 </script>
-<style>
-</style>
+<style></style>

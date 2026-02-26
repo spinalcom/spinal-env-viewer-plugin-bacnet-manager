@@ -79,6 +79,7 @@ export class SpinalBacnetPluginService {
     if (organModel) {
       return organModel.isReferencedInContext(contextId);
     }
+
     throw new Error("No model found for this server_id");
   }
 
