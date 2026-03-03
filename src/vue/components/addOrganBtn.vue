@@ -54,9 +54,9 @@ export default {
       isLinked: false,
     };
   },
-  mounted() {
-    const isLinked = SpinalBacnetPluginService.isReferencedInContext(this.server_id, this.contextId);
-    this.isFound = true;
+  async mounted() {
+    const isLinked = await SpinalBacnetPluginService.isReferencedInContext(this.server_id, this.contextId);
+    this.isFound = true; // if no error occurs, set isFound to true
     this.isLinked = isLinked;
   },
   methods: {
