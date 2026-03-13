@@ -24,42 +24,32 @@ with this file. If not, see
 
 <template>
   <div class="device">
-    <div class="name"
-         v-tooltip="device.name">
+    <div class="name" v-tooltip="device.name">
       {{ device.name }}
     </div>
 
-    <div class="state"
-         :class="state">
+    <div class="state" :class="state">
       {{ state }}
     </div>
 
     <div class="actions">
-      <md-button class="md-icon-button md-primary"
-                 v-tooltip="'start'"
-                 :disabled="disabledStart()"
-                 @click="startMonitoring">
+      <md-button class="md-icon-button md-primary" v-tooltip="'start'" :disabled="disabledStart()"
+        @click="startMonitoring">
         <md-icon>play_arrow</md-icon>
       </md-button>
 
-      <md-button class="md-icon-button md-primary"
-                 v-tooltip="'restart'"
-                 :disabled="disabledRestart()"
-                 @click="restartMonitoring">
+      <md-button class="md-icon-button md-primary" v-tooltip="'restart'" :disabled="disabledRestart()"
+        @click="restartMonitoring">
         <md-icon>replay</md-icon>
       </md-button>
 
-      <md-button class="md-icon-button md-accent"
-                 v-tooltip="'stop'"
-                 :disabled="disabledStop()"
-                 @click="stopMonitoring">
+      <md-button class="md-icon-button md-accent" v-tooltip="'stop'" :disabled="disabledStop()" @click="stopMonitoring">
         <md-icon>stop</md-icon>
       </md-button>
 
       <div class="block">
         <div class="input">
-          <md-checkbox class="md-primary"
-                       v-model="saveTimeSeries">Save TimeSeries</md-checkbox>
+          <md-checkbox class="md-primary" v-model="saveTimeSeries">Save TimeSeries</md-checkbox>
         </div>
       </div>
 
@@ -95,7 +85,7 @@ export default {
       this.saveTimeSeries = this.model.saveTimeSeries.get();
     }
   },
-  mounted() {},
+  mounted() { },
 
   methods: {
     async startMonitoring() {
@@ -132,9 +122,6 @@ export default {
       this.saveTimeSeries = value;
     },
 
-    ////////////////////////////////////////////
-    ////              DISABLED                //
-    ////////////////////////////////////////////
 
     disabledRestart() {
       const model = this.model;
@@ -210,6 +197,7 @@ export default {
 .device .state.Running {
   color: chartreuse;
 }
+
 .device .state.Stopped {
   color: #ff5252;
 }

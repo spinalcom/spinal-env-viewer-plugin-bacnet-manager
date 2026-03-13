@@ -1,102 +1,50 @@
 <template>
-   <md-dialog
-      class="mdDialogContainer"
-      :md-active.sync="showDialog"
-      @md-closed="closeDialog(false)"
-   >
-      <md-dialog-title class="dialogTitle">Get Bacnet Value</md-dialog-title>
+   <md-dialog class="mdDialogContainer" :md-active.sync="showDialog" @md-closed="closeDialog(false)">
+      <md-dialog-title class="dialogTitle">Get Bacnet Values</md-dialog-title>
       <md-dialog-content class="content">
 
-         <div
-            class="itemList"
-            v-if="pageSelected === PAGES.selection"
-         >
-            <div
-               class="itemList-item"
-               v-for="item in sensor_types"
-               :key="item.id"
-            >
-               <md-checkbox
-                  class="md-primary"
-                  v-model="item.checked"
-               />
-               <!-- :value="item.checked" -->
-               <span class="md-list-item-text">{{item.name}}</span>
+         <!-- Selection Page (select sensor types) -->
+         <div class="itemList" v-if="pageSelected === PAGES.selection">
+            <div class="itemList-item" v-for="item in sensor_types" :key="item.id">
+               <md-checkbox class="md-primary" v-model="item.checked" />
+               <span class="md-list-item-text">{{ item.name }}</span>
             </div>
          </div>
 
-         <div
-            class="devicesProgress"
-            v-else-if="pageSelected === PAGES.creation"
-         >
+         <!-- Devices Progress Page -->
+         <div class="devicesProgress" v-else-if="pageSelected === PAGES.creation">
 
-            <div
-               class="device"
-               v-for="device in nodes"
-               :key="device.id"
-            >
-               <div class="name">{{device.info.name}}</div>
-               <div
-                  class="progress-bar"
-                  v-if="device.progress != -1"
-               >
+            <div class="device" v-for="device in nodes" :key="device.id">
+               <div class="name">{{ device.info.name }}</div>
+
+               <div class="progress-bar" v-if="device.progress != -1">
                   <div class="progress-value">
-                     <md-progress-bar
-                        md-mode="buffer"
-                        :md-value="device.progress"
-                     ></md-progress-bar>
+                     <md-progress-bar md-mode="buffer" :md-value="device.progress"></md-progress-bar>
                   </div>
 
-                  <div class="progress-number">{{device.progress}} %</div>
+                  <div class="progress-number">{{ device.progress }} %</div>
                </div>
 
-               <div
-                  class="progress-bar"
-                  v-else
-               >
-                  <div
-                     class="message"
-                     :class="device.message.id"
-                  >{{device.message.text}}</div>
+               <div class="progress-bar" v-else>
+                  <div class="message" :class="device.message.id">{{ device.message.text }}</div>
                </div>
             </div>
 
          </div>
 
-         <div
-            class="state"
-            v-else-if="pageSelected === PAGES.loading"
-         >
-            <md-progress-spinner md-mode="indeterminate"></md-progress-spinner>
-         </div>
-
-         <div
-            class="state"
-            v-else-if="pageSelected === PAGES.success"
-         >
-            <md-icon class="md-size-5x">done</md-icon>
-         </div>
-
-         <div
-            class="state"
-            v-else-if="pageSelected === PAGES.error"
-         >
-            <md-icon class="md-size-5x">error_outline</md-icon>
+         <!-- State Page -->
+         <div class="state" v-else>
+            <md-progress-spinner v-if="pageSelected === PAGES.loading" md-mode=" indeterminate"></md-progress-spinner>
+            <md-icon class="md-size-5x" v-else-if="pageSelected === PAGES.success">done</md-icon>
+            <md-icon class="md-size-5x" v-else-if="pageSelected === PAGES.error">error_outline</md-icon>
          </div>
 
       </md-dialog-content>
 
       <md-dialog-actions>
-         <md-button
-            class="md-primary"
-            @click="closeDialog(false)"
-         >Close</md-button>
+         <md-button class="md-primary" @click="closeDialog(false)">Close</md-button>
 
-         <md-button
-            class="md-primary"
-            :disabled='disabled()'
-            @click="getBacnetValue"
-         >GET Bacnet</md-button>
+         <md-button class="md-primary" :disabled='disabled()' @click="getAllBacnetValues">GET Bacnet</md-button>
       </md-dialog-actions>
    </md-dialog>
 </template>
@@ -105,12 +53,9 @@
 <script>
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { SENSOR_TYPES, MESSAGES } from "../../js/constants";
-import {
-   SpinalBacnetValueModel,
-   SpinalOrganConfigModel,
-} from "spinal-model-bacnet";
+import { SpinalBacnetValueModel, BACNET_VALUES_STATE } from "spinal-model-bacnet";
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
-import utilities from "../../js/utilities";
+import Utilities from "../../js/utilities";
 
 export default {
    name: "GetBacnetValueDialog",
@@ -125,48 +70,37 @@ export default {
       };
 
       this.MESSAGES = MESSAGES;
+      this.context = null;
+      this.graph = null;
+      this.selectedNode = null;
+      this.network = null;
 
       return {
-         sensor_types: Object.assign([], SENSOR_TYPES),
+         sensor_types: [...SENSOR_TYPES],
          pageSelected: this.PAGES.creation,
          showDialog: true,
-         nodes: undefined,
-         context: undefined,
-         graph: undefined,
-         network: undefined,
-      };
+         devices: []
+      }
    },
    methods: {
       async opened(option) {
          this.pageSelected = this.PAGES.loading;
-         const { selectedNode, context, graph } = option;
-         this.context = SpinalGraphService.getRealNode(context.id);
-         this.graph = graph;
 
-         let devices = await this.getBmsDevices(context.id, selectedNode.id);
+         this.context = option.context;
+         this.graph = option.graph;
+         this.selectedNode = option.selectedNode;
 
-         this.nodes = devices.map((el) => ({
-            info: el.get(),
-            progress: -1,
-            message: this.MESSAGES.wait,
-         }));
 
-         this.network = await this._getNetwork(context.id, selectedNode.id);
-         // if (option.networkId) {
-         //    this.network = SpinalGraphService.getRealNode(option.networkId);
-         // } else {
-         //    this.network = await this._getNetwork(
-         //       option.contextId,
-         //       option.nodeId
-         //    );
-         // }
+         this.devices = await this.getBmsDevices(this.context, this.selectedNode);
+         this.network = await Utilities.getNetwork(this.context, this.selectedNode);
+         // this.network = await this._getNetwork(this.context, this.selectedNode);
 
          this.pageSelected = this.PAGES.selection;
       },
 
       removed(save) {
-         if (save) {
-         }
+         if (save) { }
+
          this.showDialog = false;
       },
 
@@ -179,85 +113,12 @@ export default {
          return true;
       },
 
-      async getBacnetValue() {
-         this.pageSelected = this.PAGES.creation;
-         const sensors = this.sensor_types
-            .filter((el) => el.checked)
-            .map((el) => el.value);
+      getSensorSelected() {
+         return this.sensor_types.reduce((list, sensor) => {
+            if (sensor.checked) list.push(sensor.value);
+            return list;
+         }, [])
 
-         const iterator = [...this.nodes];
-         const organ = await this._getOrgan(this.network);
-
-         this.createValue(iterator, sensors, organ);
-      },
-
-      createValue(iterator, sensors, organ) {
-         console.log("inside createValue...");
-         const value = iterator.shift();
-
-         if (value && this.showDialog) {
-            // const value = next.value;
-            const realNode = SpinalGraphService.getRealNode(value.info.id);
-
-            const model = new SpinalBacnetValueModel(
-               this.graph,
-               this.context,
-               organ,
-               this.network,
-               realNode,
-               sensors
-            );
-
-            console.log("model", model);
-            model.addToNode();
-            let progressProcess;
-
-            const modelProcess = model.state.bind(() => {
-               switch (model.state.get()) {
-                  case "recover":
-                     console.log("recovering...");
-                     value.message = this.MESSAGES.recover;
-                     value.progress = -1;
-                     break;
-                  case "progress":
-                     console.log("progress...");
-                     progressProcess = model.progress.bind(() => {
-                        value.progress = model.progress.get();
-                     });
-                     break;
-                  case "success":
-                  case "error":
-                     console.log("success or error");
-                     model.state.unbind(modelProcess);
-                     model.progress.unbind(progressProcess);
-
-                     value.message = this.MESSAGES[model.state.get()];
-                     value.progress = -1;
-
-                     this.createValue(iterator, sensors, organ);
-                     break;
-
-                  default:
-                     break;
-               }
-
-               // if (model.state.get() === "success") {
-               //    model.state.unbind(modelProcess);
-               //    value.message = this.MESSAGES.success;
-               //    value.progress = -1;
-
-               //    this.createValue(iterator, iterator.next(), sensors);
-               // } else if (model.state.get() === "error") {
-               //    model.state.unbind(modelProcess);
-               //    value.message = this.MESSAGES.error;
-               //    value.progress = -1;
-
-               //    this.createValue(iterator, iterator.next(), sensors);
-               // }
-            });
-         } else {
-            // this.pageSelected = this.PAGES.success;
-         }
       },
 
       closeDialog(closeResult) {
@@ -266,53 +127,104 @@ export default {
          }
       },
 
-      async _getNetwork(contextId, nodeId) {
-         const info = SpinalGraphService.getInfo(nodeId);
+      async getAllBacnetValues() {
+         this.pageSelected = this.PAGES.creation;
+         const sensors = this.getSensorSelected();
 
-         if (info.type.get() === SpinalBmsNetwork.nodeTypeName) {
-            const parents = await SpinalGraphService.getParents(nodeId, [
-               SpinalBmsNetwork.relationName,
-            ]);
-            const organ = parents.find(
-               (el) => el.type.get() === SpinalOrganConfigModel.TYPE
-            );
-            // console.log("organ", organ);
-            if (organ) return SpinalGraphService.getRealNode(organ.id.get());
-         } else {
-            const networks = await SpinalGraphService.getChildrenInContext(
-               contextId,
-               contextId
-            );
-            const parentId = await this._getParent(nodeId);
+         const devices = [...this.devices];
+         const organ = await Utilities.getOrgan(this.network, this.context);
 
-            for (const network of networks) {
-               const id = network.id.get();
-               const childId = SpinalGraphService.getChildrenIds(id);
-               if (childId.indexOf(parentId) !== -1) {
-                  return SpinalGraphService.getRealNode(id);
+         this.getBacnetVal(devices, sensors, organ);
+      },
+
+      async getBacnetVal(devices, sensors, organ) {
+
+         while (devices.length > 0 && this.showDialog) {
+            const device = devices.shift();
+            const listenerModel = new SpinalBacnetValueModel(this.graph, this.context, organ, this.network, device.node, sensors);
+            await listenerModel.addToGraph();
+
+            // bind the listener state to update the progress and message of the device
+            // this function wait until the process is finished (success or error) before going to the next device
+            await this.bindListenerState(listenerModel, device);
+
+         }
+
+         // const value = next.value;
+
+      },
+
+      bindListenerState(model, device) {
+         return new Promise((resolve) => {
+            let progressProcess, modelProcess;
+
+            modelProcess = model.state.bind(() => {
+               const state = model.state.get();
+
+               switch (state) {
+                  case BACNET_VALUES_STATE.recover:
+                     device.message = this.MESSAGES.recover;
+                     device.progress = -1;
+                     break;
+
+                  case BACNET_VALUES_STATE.progress:
+                     progressProcess = model.progress.bind(() => device.progress = model.progress.get());
+                     break;
+
+                  case BACNET_VALUES_STATE.success:
+                  case BACNET_VALUES_STATE.error:
+                     model.state.unbind(modelProcess);
+                     model.progress.unbind(progressProcess);
+
+                     device.message = this.MESSAGES[state];
+                     device.progress = -1;
+
+                     resolve(state === BACNET_VALUES_STATE.success);
+                     break;
                }
-            }
-         }
-      },
-
-      _getOrgan(network) {
-         if (network) {
-            return network.getElement();
-         }
-      },
-
-      async getBmsDevices(contextId, id) {
-         const info = SpinalGraphService.getInfo(id);
-         if (info.type.get() === SpinalBmsDevice.nodeTypeName) {
-            return [info];
-         }
-         return SpinalGraphService.findInContext(id, contextId, (node) => {
-            if (node.getType().get() === SpinalBmsDevice.nodeTypeName) {
-               SpinalGraphService._addNode(node);
-               return true;
-            }
-            return false;
+            });
          });
+      },
+
+
+
+      // async _getNetwork(context, startNode) {
+
+
+      // const info = SpinalGraphService.getInfo(nodeId);
+      // const nodeType = info.type.get();
+
+      // if (nodeType === SpinalBmsNetwork.nodeTypeName) {
+      //    const parents = await SpinalGraphService.getParents(nodeId, [SpinalBmsNetwork.relationName]);
+      //    const organ = parents.find((parent) => parent.type.get() === SpinalOrganConfigModel.TYPE);
+      //    // console.log("organ", organ);
+      //    if (organ) return SpinalGraphService.getRealNode(organ.id.get());
+      // } else {
+      //    const networks = await SpinalGraphService.getChildrenInContext(
+      //       contextId,
+      //       contextId
+      //    );
+      //    const parentId = await this._getParent(nodeId);
+
+      //    for (const network of networks) {
+      //       const id = network.id.get();
+      //       const childId = SpinalGraphService.getChildrenIds(id);
+      //       if (childId.indexOf(parentId) !== -1) {
+      //          return SpinalGraphService.getRealNode(id);
+      //       }
+      //    }
+      // }
+      // },
+
+      // _getOrgan(network) {
+      //    if (network) {
+      //       return network.getElement();
+      //    }
+      // },
+
+      async getBmsDevices(context, startNode) {
+         let devices = await Utilities.getBmsDevices(context, startNode);
+         return devices.map((device) => ({ info: device.info.get(), progress: -1, message: this.MESSAGES.wait, node: device }));
       },
 
       async _getParent(nodeId) {
@@ -377,6 +289,7 @@ export default {
    text-overflow: ellipsis;
    white-space: nowrap;
 }
+
 .mdDialogContainer .content .devicesProgress .device .progress-bar {
    width: 30%;
    display: flex;
@@ -388,47 +301,24 @@ export default {
    text-align: center;
 }
 
-.mdDialogContainer
-   .content
-   .devicesProgress
-   .device
-   .progress-bar
-   .message.waiting {
+.mdDialogContainer .content .devicesProgress .device .progress-bar .message.waiting {
    color: grey;
 }
-.mdDialogContainer
-   .content
-   .devicesProgress
-   .device
-   .progress-bar
-   .message.success {
+
+.mdDialogContainer .content .devicesProgress .device .progress-bar .message.success {
    color: green;
 }
-.mdDialogContainer
-   .content
-   .devicesProgress
-   .device
-   .progress-bar
-   .message.error {
+
+.mdDialogContainer .content .devicesProgress .device .progress-bar .message.error {
    color: #ff5252;
 }
 
-.mdDialogContainer
-   .content
-   .devicesProgress
-   .device
-   .progress-bar
-   .progress-number {
+.mdDialogContainer .content .devicesProgress .device .progress-bar .progress-number {
    width: 25%;
    text-align: center;
 }
 
-.mdDialogContainer
-   .content
-   .devicesProgress
-   .device
-   .progress-bar
-   .progress-value {
+.mdDialogContainer .content .devicesProgress .device .progress-bar .progress-value {
    width: 75%;
 }
 

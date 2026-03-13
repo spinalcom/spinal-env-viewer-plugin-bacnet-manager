@@ -24,48 +24,35 @@ with this file. If not, see
 
 <template>
   <div class="device">
-    <div class="name"
-         v-tooltip="device.name">
-      {{ device.name }}
+    <div class="name" v-tooltip="device.name">
+      {{ device.getName().get() }}
     </div>
 
-    <div class="state"
-         :class="state">
+    <div class="state" :class="state">
       {{ state }}
     </div>
 
     <div class="actions">
-      <md-button class="md-icon-button md-primary"
-                 v-tooltip="'start'"
-                 :disabled="disabledStart()"
-                 @click="startMonitoring">
+      <md-button class="md-icon-button md-primary" v-tooltip="'start'" :disabled="disabledStart()"
+        @click="startMonitoring">
         <md-icon>play_arrow</md-icon>
       </md-button>
 
-      <md-button class="md-icon-button md-primary"
-                 v-tooltip="'restart'"
-                 :disabled="disabledRestart()"
-                 @click="restartMonitoring">
+      <md-button class="md-icon-button md-primary" v-tooltip="'restart'" :disabled="disabledRestart()"
+        @click="restartMonitoring">
         <md-icon>replay</md-icon>
       </md-button>
 
-      <md-button class="md-icon-button md-accent"
-                 v-tooltip="'stop'"
-                 :disabled="disabledStop()"
-                 @click="stopMonitoring">
+      <md-button class="md-icon-button md-accent" v-tooltip="'stop'" :disabled="disabledStop()" @click="stopMonitoring">
         <md-icon>stop</md-icon>
       </md-button>
 
       <div class="block">
         <div class="input">
-          <md-checkbox class="md-primary"
-                       v-model="saveTimeSeries">Save TimeSeries</md-checkbox>
+          <md-checkbox class="md-primary" v-model="saveTimeSeries">Save TimeSeries</md-checkbox>
         </div>
       </div>
 
-      <!-- <md-button class="md-icon-button">
-                  <md-icon class="md-primary">star</md-icon>
-               </md-button> -->
     </div>
   </div>
 </template>
@@ -78,125 +65,101 @@ export default {
   name: "deviceMonitoring",
   props: {
     device: { required: true },
-    // context: { required: true },
-    // graph: { required: true },
-    profilId: { type: String, required: false },
+    context: { required: true },
+    graph: { required: true },
+    profile: { required: true },
+    network: { required: true },
+    organ: { required: true },
   },
   data() {
     return {
       saveTimeSeries: false,
-      model: undefined,
+      listenerModel: undefined,
     };
   },
   async created() {
-    this.model = await utilities.getModel(this.device.id);
-    if (this.model && this.model.saveTimeSeries) {
-      this.saveTimeSeries = this.model.saveTimeSeries.get();
+    this.listenerModel = await utilities.getListenerModel(this.device);
+
+    if (this.listenerModel && this.listenerModel.saveTimeSeries) {
+      this.saveTimeSeries = this.listenerModel.saveTimeSeries.get();
     }
   },
 
   methods: {
     async startMonitoring() {
-      this.model = await monitorState.startMonitoring(
-        this.device.id,
-        this.profilId,
-        this.model
-      );
-
-      return this.model;
-
-      // const deviceId = this.device.id;
-      // const contextId = this.context.id;
-      // await utilities.startMonitoring(this.graph, contextId, deviceId);
-      // if (!this.model || this.model === -1) {
-      //   const realNode = SpinalGraphService.getRealNode(this.device.id);
-      //   this.model = await utilities.getModel(realNode);
-      // }
+      const model = await utilities.createOrModifyListenerModel(this.graph, this.context, this.network, this.listenerModel, this.profile, this.organ, this.device);
+      this.listenerModel = model;
+      this.listenerModel.listen.set(true);
+      return this.listenerModel;
     },
 
     stopMonitoring() {
-      return monitorState.stopMonitoring(
-        this.device.id,
-        this.profilId,
-        this.model
-      );
-
-      // if (this.model != -1 && this.model.listen) {
-      //    this.model.listen.set(false);
-      // }
-      // return utilities.stopMonitoring(this.device.id);
+      if (this.listenerModel && this.listenerModel.listen) {
+        this.listenerModel.listen.set(false)
+      };
+      return this.listenerModel;
     },
 
     async restartMonitoring() {
+      // stop the listener
       await this.stopMonitoring();
-      return new Promise((resolve) => {
-        setTimeout(async () => {
-          this.model = await this.startMonitoring();
-          resolve(this.model);
-        }, 1500);
-      });
 
-      // if (!utilities.hasProfilLinked(this.device.id)) return -1;
-      // await utilities.stopMonitoring(this.device.id);
-      // return new Promise((resolve, reject) => {
-      //   setTimeout(async () => {
-      //     await this.startMonitoring();
-      //     resolve(true);
-      //   }, 1500);
-      // });
+      // wait for the listener to stop and clean the model
+      await this.wait(1500);
+
+      // start the listener
+      this.listenerModel = await this.startMonitoring();
+      return this.listenerModel;
     },
 
     updateTimeSeries(value) {
       this.saveTimeSeries = value;
     },
 
-    ////////////////////////////////////////////
-    ////              DISABLED                //
-    ////////////////////////////////////////////
+    wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    },
+
 
     disabledRestart() {
-      const model = this.model;
-      return (
-        !this.profilId ||
-        !(model && model !== -1 && model.listen && model.listen.get())
-      );
+      if (!this.listenerModel || this.listenerModel == -1 || !this.profile) return true;
+      if (!this.listenerModel.listen || !this.listenerModel.listen.get()) return true;
+
+      return false;
     },
 
     disabledStart() {
-      if (!this.hasProfil) return true;
-      const model = this.model;
-      return model && model !== -1 && model.listen && model.listen.get();
+      if (!this.profile) return true;
+
+      return this.listenerModel && this.listenerModel !== -1 && this.listenerModel.listen && this.listenerModel.listen.get();
     },
 
     disabledStop() {
-      const model = this.model;
-      return (
-        !this.hasProfil ||
-        !(model && model !== -1 && model.listen && model.listen.get())
-      );
+      if (!this.listenerModel || this.listenerModel == -1 || !this.profile) return true;
+      if (!this.listenerModel.listen || !this.listenerModel.listen.get()) return true;
+
+      return false;
     },
+
   },
   computed: {
     state() {
-      return this.model && this.model.listen && this.model.listen.get()
-        ? "Running"
-        : "Stopped";
+      return this.listenerModel && this.listenerModel.listen && this.listenerModel.listen.get() ? "Running" : "Stopped";
     },
-    hasProfil() {
-      return this.profilId;
-    },
+    // hasProfil() {
+    //   return this.profile && this.profile !== -1;
+    // },
   },
   watch: {
     saveTimeSeries() {
-      if (this.model && this.model !== -1) {
-        if (this.model.saveTimeSeries) {
-          this.model.saveTimeSeries.set(this.saveTimeSeries);
-        } else {
-          this.model.add_attr({
-            saveTimeSeries: this.saveTimeSeries,
-          });
-        }
+      if (!this.listenerModel || this.listenerModel === -1) return;
+
+      if (this.listenerModel.saveTimeSeries) {
+        this.listenerModel.saveTimeSeries.set(this.saveTimeSeries);
+        return;
       }
+
+      this.listenerModel.add_attr({ saveTimeSeries: this.saveTimeSeries });
     },
   },
 };
@@ -228,6 +191,7 @@ export default {
 .device .state.Running {
   color: chartreuse;
 }
+
 .device .state.Stopped {
   color: #ff5252;
 }

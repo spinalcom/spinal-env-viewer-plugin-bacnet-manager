@@ -31,67 +31,44 @@ with this file. If not, see
 
       <md-button @click="discover">Discover</md-button> -->
     <md-steppers md-vertical>
-      <md-step id="first"
-               md-label="Network name"
-               md-description="Network name">
+      <md-step id="first" md-label="Network name" md-description="Network name">
         <div class="stepContainer">
           <div class="header">
-            <div class="radio"
-                 :class="{ isActive: network.useBroadcast }">
-              <md-radio class="md-primary"
-                        v-model="network.useBroadcast"
-                        :value="true">Broadcast</md-radio>
+            <div class="radio" :class="{ isActive: network.useBroadcast }">
+              <md-radio class="md-primary" v-model="network.useBroadcast" :value="true">Broadcast</md-radio>
             </div>
 
-            <div class="radio"
-                 :class="{ isActive: !network.useBroadcast }">
-              <md-radio class="md-primary"
-                        v-model="network.useBroadcast"
-                        :value="false">Unicast</md-radio>
+            <div class="radio" :class="{ isActive: !network.useBroadcast }">
+              <md-radio class="md-primary" v-model="network.useBroadcast" :value="false">Unicast</md-radio>
             </div>
           </div>
 
           <div class="content">
-            <broadcast-template v-if="network.useBroadcast"
-                                :network="network"></broadcast-template>
+            <broadcast-template v-if="network.useBroadcast" :network="network"></broadcast-template>
 
-            <unicast-template v-else
-                              :network="network"></unicast-template>
+            <unicast-template v-else :network="network"></unicast-template>
           </div>
         </div>
       </md-step>
 
-      <md-step id="second"
-               md-label="Discover network"
-               md-description="Discover">
+      <md-step id="second" md-label="Discover network" md-description="Discover">
         <div class="stepContainer">
-          <discover-table :devices="devices"
-                          :state="state"
-                          :selected="selected"
-                          :network="network"
-                          @discover="discover"
-                          @select="selectDevice"
-                          @stop="stopDiscovering"></discover-table>
+          <discover-table :devices="devices" :state="state" :selected="selected" :network="network" @discover="discover"
+            @select="selectDevice" @stop="stopDiscovering"></discover-table>
         </div>
 
         <!-- <md-button @click="discover">Discover</md-button>
              -->
       </md-step>
 
-      <md-step id="third"
-               md-label="Create network"
-               md-description="Create">
+      <md-step id="third" md-label="Create network" md-description="Create">
         <div class="stepContainer">
           <div class="loading">
-            <md-progress-spinner v-if="state === STATES.creating"
-                                 md-mode="indeterminate"></md-progress-spinner>
+            <md-progress-spinner v-if="state === STATES.creating" md-mode="indeterminate"></md-progress-spinner>
 
-            <md-icon v-else-if="state === STATES.created"
-                     class="md-size-5x">check</md-icon>
+            <md-icon v-else-if="state === STATES.created" class="md-size-5x">check</md-icon>
 
-            <md-button v-else
-                       :disabled="selected.length === 0"
-                       @click="createNodes">Create Network</md-button>
+            <md-button v-else :disabled="selected.length === 0" @click="createNodes">Create Network</md-button>
           </div>
         </div>
       </md-step>
@@ -100,14 +77,14 @@ with this file. If not, see
 </template>
 
 <script>
-import { STATES, SpinalDisoverModel } from "spinal-model-bacnet";
-import { SpinalGraphService } from "spinal-env-viewer-graph-service";
+import { SpinalDiscoverModel } from "spinal-model-bacnet";
 
 import { NETWORK_TYPE } from "../../js/constants";
 import discoverTable from "../components/discoverTable.vue";
+import { STATES } from "spinal-connector-service";
+
 // import { STATES } from "../../js/stateEnum";
 
-// import { SpinalDisoverModel } from "../../model/SpinalDiscoverModel";
 
 import BroadcastTemplate from "../components/broadcastTemplate.vue";
 import UnicastTemplate from "../components/unicastTemplate.vue";
@@ -128,7 +105,7 @@ export default {
     this.organ;
     this.devicesBindProcess;
     return {
-      state: STATES.reseted,
+      state: STATES.initial,
       devices: [],
       selected: [],
       network: {
@@ -142,133 +119,91 @@ export default {
     };
   },
   methods: {
-    async opened(params) {
-      this.graph = params.graph;
-      this.context = params.context.get();
-      this.organ = await this.getOrganModel(params.selectedNode.id.get());
+    async opened({ graph, context, organ }) {
+      this.graph = graph;
+      this.context = context;
+      this.organ = organ;
 
-      if (typeof this.spinalDiscover !== "undefined") {
-        this.spinalDiscover = undefined;
-        this.state = STATES.reseted;
-      }
+      if (typeof this.spinalDiscover !== "undefined") this.reInitDevice();
     },
 
-    closed() {},
+    closed() { },
 
+    reInitDevice() {
+      this.spinalDiscover = undefined;
+      this.state = STATES.initial;
+    },
+
+    // Discover the network and get the devices found
     async discover() {
-      if (typeof this.spinalDiscover === "undefined") {
-        this.spinalDiscover = new SpinalDisoverModel(
-          this.graph,
-          this.context,
-          this.network,
-          this.organ
-        );
-
-        // console.log(this.spinalDiscover);
+      if (!this.spinalDiscover) {
+        this.spinalDiscover = new SpinalDiscoverModel(this.graph, this.context, this.organ, this.network);
 
         await this.spinalDiscover.addToGraph();
       }
 
-      this.spinalDiscover.setDiscoveringMode();
-      this.getDevicesFound();
+      this.spinalDiscover.setDiscoveringState();
+      this._bindDevice();
     },
 
-    createNodes() {
+    async createNodes() {
       console.log("creating...");
-      this.spinalDiscover.devices.set(this.selected);
-      // this.spinalDiscover.state.set(STATES.creating);
-      this.spinalDiscover.setCreatingMode();
+      await this.spinalDiscover.setTreeToCreate(this.selected);
+      this.spinalDiscover.setCreatingState();
     },
 
-    getDevicesFound() {
-      this.devicesBindProcess = this.spinalDiscover.state.bind(() => {
+    _bindDevice() {
+      this.devicesBindProcess = this.spinalDiscover.state.bind(async () => {
         console.log(this.spinalDiscover.state.get());
         this.state = this.spinalDiscover.state.get();
 
         if (this.state === STATES.discovered) {
-          this.devices = this.spinalDiscover.devices.get();
+          // getDevices found in server
+          this.devices = await this.spinalDiscover.getTreeDiscovered();
         } else if (this.state === STATES.created) {
+          // reset all data
           this.spinalDiscover = undefined;
-          // this.state = STATES.reseted;
         }
 
-        // switch (this.spinalDiscover.state.get()) {
-        //    case STATES.discovered:
-        //       this.state = STATES.discovered;
-        //       this.devices = this.spinalDiscover.devices.get();
-        //       break;
-        //    case STATES.timeout:
-        //       this.state = STATES.timeout;
-        //       break;
-        //    case STATES.discovering:
-        //       this.state = STATES.discovering;
-        //       break;
-        //    case STATES.creating:
-        //       this.state = STATES.creating;
-        //       break;
-        //    case STATES.created:
-        //       this.state = STATES.created;
-        //       break;
-        //    case STATES.error:
-        //       this.state = STATES.error;
-        //    case STATES.reseted:
-        //       this.state = STATES.reseted;
-        //       break;
-
-        //    default:
-        //       break;
-        // }
-        // // this.devices = this.graph.info.discover.devices.get();
       });
     },
 
-    getOrganModel(nodeId) {
-      const realNode = SpinalGraphService.getRealNode(nodeId);
-      return realNode.getElement();
-    },
+    // getOrganModel(nodeId) {
+    //   return realNode.getElement();
+    // },
 
     ModContextAttr(context) {
-      if (context.name) {
-        context.name.set(this.context.name);
-      } else {
-        context.add_attr({ name: this.context.name });
-      }
+      if (context.name) context.name.set(this.context.name);
+      else context.add_attr({ name: this.context.name });
 
-      if (context.type) {
-        context.type.set(this.context.type);
-      } else {
-        context.add_attr({ type: this.context.type });
-      }
+
+      if (context.type) context.type.set(this.context.type);
+      else context.add_attr({ type: this.context.type });
+
     },
 
     ModNetworkAttr(network) {
-      if (network.name) {
-        network.name.set(this.network.name);
-      } else {
-        network.add_attr({ name: this.network.name });
-      }
+      if (network.name) network.name.set(this.network.name);
+      else network.add_attr({ name: this.network.name });
 
-      if (network.type) {
-        network.type.set(this.network.type);
-      } else {
-        network.add_attr({ type: this.network.type });
-      }
+
+      if (network.type) network.type.set(this.network.type);
+      else network.add_attr({ type: this.network.type });
     },
 
     selectDevice(devices) {
       this.selected = devices;
     },
 
-    stopDiscovering() {
-      if (this.spinalDiscover) {
-        this.spinalDiscover.setResetedMode();
-        this.spinalDiscover.remove().then(() => {
-          this.spinalDiscover = undefined;
-          this.state = STATES.reseted;
-        });
-      } else {
-        this.state = STATES.reseted;
+    async stopDiscovering() {
+      if (!this.spinalDiscover) {
+        this.state = STATES.initial;
+        return;
       }
+
+      this.spinalDiscover.changeState(STATES.cancelled);
+      await this.spinalDiscover.removeFromGraph();
+      this.reInitDevice();
     },
   },
   watch: {
@@ -287,7 +222,7 @@ export default {
     },
   },
   beforeDestroy() {
-    this.spinalDiscover.remove(this.graph);
+    if (this.spinalDiscover) this.spinalDiscover.removeFromGraph();
   },
 };
 </script>
@@ -345,18 +280,11 @@ export default {
 <style>
 .discover_container .md-steppers.md-theme-default,
 .discover_container .md-steppers.md-theme-default .md-steppers-wrapper,
-.discover_container
-  .md-steppers.md-theme-default
-  .md-steppers-wrapper
-  .md-steppers-container {
+.discover_container .md-steppers.md-theme-default .md-steppers-wrapper .md-steppers-container {
   height: 100%;
 }
 
-.discover_container
-  .md-steppers.md-theme-default
-  .md-steppers-wrapper
-  .md-steppers-container
-  .md-stepper-content.md-active {
+.discover_container .md-steppers.md-theme-default .md-steppers-wrapper .md-steppers-container .md-stepper-content.md-active {
   min-height: 250px;
   max-height: 350px;
 }

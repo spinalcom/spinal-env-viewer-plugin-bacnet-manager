@@ -1,5 +1,5 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
-import { SpinalGraphService } from "spinal-env-viewer-graph-service";
+import { SpinalGraph, SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
 
@@ -37,32 +37,16 @@ class CreateBacnetValue extends SpinalContextApp {
       }
 
       return -1;
-
-      // if(type === SpinalBmsNetwork.nodeTypeName) {
-      //    network = option.selectedNode;
-      // } else if(type === SpinalBmsDevice.nodeTypeName) {
-      //    network = await utilities.getOrgan(id, contextId);
-      // }
-
-
-
-      // if(type === SpinalBmsNetwork.nodeTypeName || type === SpinalBmsDevice.nodeTypeName) {
-      //    const network = await getNetwork(id,type,contextId);
-      //    if(network) {
-      //       const parents = await SpinalGraphService.getParents(id,[SpinalBmsNetwork.relationName]);
-      //       const found = parents.find(el => el.id.get() === BACNET_ORGAN_TYPE);
-      //       return found || -1;
-      //    }
-      // }
-
-      // return  -1;
    }
 
    async action(option) {
 
+      const nodeId = option.selectedNode.id.get();
+      const contextId = option.context.id.get();
+
       spinalPanelManagerService.openPanel("getBacnetValueDialog", {
-         selectedNode: option.selectedNode.get(),
-         context: option.context.get(),
+         selectedNode: SpinalGraphService.getRealNode(nodeId),
+         context: SpinalGraphService.getContext(contextId),
          graph: option.graph,
       })
    }

@@ -48,10 +48,12 @@ with this file. If not, see
       </div>
 
       <div class="devices_list">
-        <device-monitoring v-for="device in devices" :key="device.id" :ref="device.id" :device="device"
-          :profilId="device.profilId" :context="context" :graph="graph"></device-monitoring>
+        <device-monitoring v-for="item in devices" :ref="item.device.getId().get()" :key="item.device.getId().get()"
+          :device="item.device" :profile="item.profile" :context="context" :graph="graph" :network="network"
+          :organ="organ"></device-monitoring>
       </div>
     </div>
+
     <div class="state" v-else-if="pageSelected === PAGES.loading">
       <md-progress-spinner md-mode="indeterminate"></md-progress-spinner>
     </div>
@@ -68,9 +70,7 @@ import { spinalEventEmitter } from "spinal-env-viewer-plugin-event-emitter";
 import utilities from "../../js/utilities";
 import { monitorState } from "../../js/monitorState";
 
-const {
-  spinalPanelManagerService,
-} = require("spinal-env-viewer-panel-manager-service");
+const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 
 export default {
   name: "manageDevicesPanel",
@@ -100,29 +100,26 @@ export default {
   created() {
     spinalEventEmitter.on("deviceProfileContext-ChangeSupervision", () => { });
   },
+
   methods: {
     async opened({ context, graph, selectedNode }) {
       this.pageSelected = this.PAGES.loading;
-      this.setPanelTitle(selectedNode.name);
+      this.setPanelTitle(selectedNode.name); // change panel title
       monitorState.clear();
 
       try {
-        const [nodeId, contextId] = [selectedNode.id, context.id];
+
         this.context = context;
         this.graph = graph;
         this.selectedNode = selectedNode;
+        this.network = await utilities.getNetwork(this.selectedNode, this.context);
+        this.organ = await utilities.getOrgan(this.network, this.context);
 
-        await monitorState.init(graph, contextId, nodeId);
-        const { devices, profilIds } = await this.getBmsDevices(
-          contextId,
-          nodeId
-        );
+        this.devices = await this.getBmsDevices(context, selectedNode);
 
-        this.devices = devices;
-        await this.saveProfilIds(profilIds);
+        // await this.saveProfilIds(profilIds);
 
-        console.log(monitorState);
-
+        // console.log(monitorState);
         this.pageSelected = this.PAGES.selection;
       } catch (error) {
         console.error(error);
@@ -132,166 +129,98 @@ export default {
 
     closed() { },
 
-    async getBmsDevices(contextId, id) {
-      return utilities.getBmsDevices(contextId, id).then((devices) => {
-        const profilIds = new Set([]);
-        const promises = devices.map(async (el) => {
-          const res = el.get();
-          const profile = await utilities.getProfilLinkedToDevice(res.id);
-          if (profile) {
-            const { id } = profile;
-            res.profilId = id;
-            profilIds.add(id);
-          }
-          return res;
-        });
+    async getBmsDevices(context, selectedNode) {
+      const devices = await utilities.getBmsDevices(context, selectedNode);
 
-        return Promise.all(promises)
-          .then((devices) => {
-            return {
-              devices,
-              profilIds: Array.from(profilIds),
-            };
-          })
-          .catch((err) => { });
+      const promises = devices.map(async (device) => {
+        const profile = await utilities.getProfilLinkedToDevice(device);
+        return { device, profile };
       });
+
+      return Promise.all(promises);
     },
 
-    saveProfilIds(profilIds) {
-      const promises = profilIds.map((id) => monitorState.addProfile(id));
-      return Promise.resolve(promises);
-    },
+    // saveProfilIds(profilIds) {
+    //   const promises = profilIds.map((id) => monitorState.addProfile(id));
+    //   return Promise.resolve(promises);
+    // },
 
-    ////////////////////////////////////////////
-    ////              CLIKS                   //
-    ////////////////////////////////////////////
+
+
+    getReferences() {
+      return this.devices.reduce((acc, { device }) => {
+        const deviceId = device.getId().get();
+        const reference = this.$refs[deviceId] ? this.$refs[deviceId][0] : null;
+        if (reference) acc.push(reference);
+        return acc;
+      }, [])
+    },
 
     async startAllMonitoring() {
-      // const length = this.devices.length;
+      const references = this.getReferences();
+      const promisesFunc = [];
 
-      // this.devices.forEach((device) => {
-      //   const deviceId = device.id;
-      //   const [ref] = this.$refs[deviceId];
-      //   if (ref) {
-      //     ref.startMonitoring();
-      //   }
-      // });
-      const references = this.devices
-        .map((el) => (this.$refs[el.id] ? this.$refs[el.id][0] : undefined))
-        .filter((el) => !!el)
-        .map((ref) => {
-          return async () => {
-            const model = await ref.startMonitoring();
-            await utilities.waitModelReady(model);
-          };
-        });
+      // we create an array of functions to execute them in batch to avoid freezing the UI
+      for (const ref of references) {
+        const func = async () => {
+          const model = await ref.startMonitoring();
+          await utilities.waitModelReady(model);
+        };
 
-      await utilities.consumeBatch(references, 30);
+        promisesFunc.push(func);
+      }
 
-      // while (references.length > 0) {
+      // execute them in batch to avoid freezing the UI
+      await utilities.consumeBatch(promisesFunc, 30);
 
-      //   const model = await ref.startMonitoring();
-      //   await utilities.waitModelReady(model);
-
-      //   // await this.execFunction(refs, (ref) => ref.startMonitoring());
-      //   // delay(2000);
-      // }
     },
 
     async restartAllMonitoring() {
-      const references = this.devices
-        .map((el) => (this.$refs[el.id] ? this.$refs[el.id][0] : undefined))
-        .filter((el) => !!el)
-        .map((ref) => {
-          return async () => {
-            const model = await ref.restartMonitoring();
-            await utilities.waitModelReady(model);
-          };
-        });
+      const references = this.getReferences();
+      const promisesFunc = [];
 
-      await utilities.consumeBatch(references, 30);
+      for (const ref of references) {
+        const func = async () => {
+          const model = await ref.restartMonitoring();
+          await utilities.waitModelReady(model);
+        };
 
-      // const length = this.devices.length;
+        promisesFunc.push(func);
+      }
 
-      // this.devices.forEach((device) => {
-      //   const deviceId = device.id;
-      //   const [ref] = this.$refs[deviceId];
-      //   if (ref) {
-      //     ref.restartMonitoring();
-      //   }
-      // });
-
-      // const references = this.devices
-      //   .map((el) => (this.$refs[el.id] ? this.$refs[el.id][0] : undefined))
-      //   .filter((el) => !!el);
-
-      // while (references.length > 0) {
-      //   const refs = references.splice(0, 10);
-      //   await this.execFunction(refs, (ref) => ref.restartMonitoring());
-      //   // delay(2000);
-      // }
-
-      // for (const device of this.devices) {
-      //   const deviceId = device.id;
-      //   const [ref] = this.$refs[deviceId];
-      //   if (ref) {
-      //     await ref.restartMonitoring();
-      //   }
-      // }
+      await utilities.consumeBatch(promisesFunc, 30);
     },
 
     async stopAllMonitoring() {
-      // this.devices.forEach((device) => {
-      //   const deviceId = device.id;
-      //   const [ref] = this.$refs[deviceId];
-      //   if (ref) {
-      //     ref.stopMonitoring();
-      //   }
-      // });
 
-      const references = this.devices
-        .map((el) => (this.$refs[el.id] ? this.$refs[el.id][0] : undefined))
-        .filter((el) => !!el);
+      const references = this.getReferences();
+      const promisesFunc = [];
 
-      while (references.length > 0) {
-        const refs = references.splice(0, 10);
-        await this.execFunction(refs, (ref) => ref.stopMonitoring());
+      for (const ref of references) {
+        const func = async () => {
+          const model = await ref.stopMonitoring();
+          await utilities.waitModelReady(model);
+        };
+
+        promisesFunc.push(func);
       }
 
-      // for (const device of this.devices) {
-      //   const deviceId = device.id;
-      //   const [ref] = this.$refs[deviceId];
-      //   if (ref) {
-      //     await ref.stopMonitoring();
-      //   }
-      // }
+      await utilities.consumeBatch(promisesFunc, 30);
     },
 
-    changeTimeSeries(value) {
-      this.devices.forEach((device) => {
-        const deviceId = device.id;
-        const [ref] = this.$refs[deviceId];
-        if (ref) {
-          ref.updateTimeSeries(value);
-        }
-      });
 
-      // const length = this.devices.length;
-      // let index = 0;
-      // while (index <= length - 1) {
-      //    const deviceId = this.devices[index].id;
-      //    const [ref] = this.$refs[deviceId];
-      //    if (ref) {
-      //       ref.updateTimeSeries(value);
-      //    }
-      //    index++;
-      // }
+
+    changeTimeSeries(value) {
+      for (const { device } of this.devices) {
+        const deviceId = device.getId().get();
+
+        const [ref] = this.$refs[deviceId];
+        if (ref) ref.updateTimeSeries(value);
+      }
     },
 
     setPanelTitle(title) {
-      spinalPanelManagerService.panels.manageDevicesPanel.panel.setTitle(
-        `Manage devices monitoring : ${title}`
-      );
+      spinalPanelManagerService.panels.manageDevicesPanel.panel.setTitle(`Manage devices monitoring : ${title}`);
     },
 
     execFunction(array, callback) {

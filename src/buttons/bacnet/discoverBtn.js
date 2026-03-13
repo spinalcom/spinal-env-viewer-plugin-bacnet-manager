@@ -1,5 +1,5 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
-import { SpinalGraphService } from "spinal-env-viewer-graph-service";
+import { SpinalGraph, SpinalGraphService } from "spinal-env-viewer-graph-service";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
 import { SpinalBmsNetwork } from "spinal-model-bmsnetwork";
@@ -23,24 +23,29 @@ class DiscoverNetworkBtn extends SpinalContextApp {
    }
 
    async isShown(option) {
-      const  typeSelected = option.selectedNode.type.get();
+      const typeSelected = option.selectedNode.type.get();
       const id = option.selectedNode.id.get();
       const contextId = option.context.id.get();
 
-      if(typeSelected === BACNET_ORGAN_TYPE) return true;
+      if (typeSelected === BACNET_ORGAN_TYPE) return true;
 
-      if(typeSelected === SpinalBmsNetwork.nodeTypeName) {
+      if (typeSelected === SpinalBmsNetwork.nodeTypeName) {
          const organ = await utilities.getOrgan(id, contextId);
 
          return organ && organ.type.get() == BACNET_ORGAN_TYPE ? true : -1;
       }
-      
-      
+
+
       return -1;
    }
 
    action(option) {
-      spinalPanelManagerService.openPanel("discoverNetworkPanel", option)
+      const params = {
+         graph: SpinalGraphService.getGraph(),
+         context: SpinalGraphService.getRealNode(option.context.id.get()),
+         organ: SpinalGraphService.getRealNode(option.selectedNode.id.get())
+      }
+      spinalPanelManagerService.openPanel("discoverNetworkPanel", params);
    }
 
 }

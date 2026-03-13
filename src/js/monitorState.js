@@ -12,40 +12,33 @@ class MonitorSate {
     this.context;
   }
 
-  async init(graph, contextId, nodeId) {
+  async init(graph, context, node) {
     this.graph = graph;
-    this.context = SpinalGraphService.getRealNode(contextId);
-    this.network = await utilities.getNetwork(nodeId, contextId);
-    const networkId = this.network.getId().get();
-    this.organ = await utilities.getOrgan(networkId, contextId);
+    this.context = context;
+    this.network = await utilities.getNetwork(node, context);
+    this.organ = await utilities.getOrgan(this.network, context);
   }
 
-  async startMonitoring(deviceId, profilId, argModel) {
+  async startMonitoring(deviceId, profilId, listenerModel) {
     if (!profilId) return -1;
-    const infoMonit = this.profils.get(profilId);
-    if (!infoMonit) return -1;
-    const model = await this.getModel(deviceId, argModel);
+
+    // const infoMonit = this.profils.get(profilId);
+    // if (!infoMonit) return -1;
+
+    const model = await this.getListenerModel(deviceId, listenerModel);
 
     const deviceNode = SpinalGraphService.getRealNode(deviceId);
 
-    return utilities.createOrModifyListenerModel(
-      this.graph,
-      this.context,
-      this.network,
-      model,
-      infoMonit,
-      this.organ,
-      deviceNode
-    );
+    return utilities.createOrModifyListenerModel(this.graph, this.context, this.network, model, infoMonit, this.organ, deviceNode);
   }
 
   async stopMonitoring(deviceId, profilId, argModel) {
     try {
       if (!profilId) return -1;
-      const model = await this.getModel(deviceId, argModel);
+      const model = await this.getListenerModel(deviceId, argModel);
 
       if (model != -1 && model.listen) model.listen.set(false);
-    } catch (error) {}
+    } catch (error) { }
   }
 
   async addProfile(profilId) {
@@ -84,10 +77,8 @@ class MonitorSate {
       });
   }
 
-  async getModel(deviceId, argModel) {
-    return argModel && argModel !== -1
-      ? argModel
-      : await utilities.getModel(deviceId);
+  async getListenerModel(deviceId, listenerModel) {
+    return listenerModel && listenerModel !== -1 ? listenerModel : await utilities.getModel(deviceId);
   }
 
   clear() {
