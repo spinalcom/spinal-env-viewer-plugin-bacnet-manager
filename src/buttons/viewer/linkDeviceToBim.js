@@ -22,30 +22,28 @@ class LinkBmsDeviceToBim extends SpinalContextApp {
    }
 
    async isShown(option) {
-      const id = option.selectedNode.id.get();
       const type = option.selectedNode.type.get();
+      if (type === BACNET_ORGAN_TYPE) return true;
+      if (type !== SpinalBmsDevice.nodeTypeName && type !== SpinalBmsNetwork.nodeTypeName) return -1;
+
+      const id = option.selectedNode.id.get();
       const contextId = option.context.id.get();
-      if(type === BACNET_ORGAN_TYPE) return true;
 
-      let network = type === SpinalBmsNetwork.nodeTypeName ? SpinalGraphService.getRealNode(id) : type === SpinalBmsDevice.nodeTypeName && await utilities.getNetwork(id, contextId);
+      const node = SpinalGraphService.getRealNode(id);
+      const context = SpinalGraphService.getRealNode(contextId);
 
-      if(network) {
-         const networkId = network.getId().get();
-         const organ = await utilities.getOrgan(networkId, contextId);
-         return organ && organ.type.get() === BACNET_ORGAN_TYPE  ? true : -1;
-      }
+      let network = await utilities.getNetwork(node, context);
+      if (!network) return -1;
 
-      return -1;
+      const organ = await utilities.getOrgan(network, context);
+      return organ && organ.getType().get() === BACNET_ORGAN_TYPE ? true : -1;
    }
 
    action(option) {
       let contextId = option.context.id.get();
       let nodeId = option.selectedNode.id.get();
 
-      spinalPanelManagerService.openPanel("linkToBimAutomateDialog", {
-         nodeId,
-         contextId
-      })
+      spinalPanelManagerService.openPanel("linkToBimAutomateDialog", { nodeId, contextId })
    }
 
 }

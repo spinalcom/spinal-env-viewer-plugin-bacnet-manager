@@ -24,19 +24,20 @@ class DiscoverNetworkBtn extends SpinalContextApp {
 
    async isShown(option) {
       const typeSelected = option.selectedNode.type.get();
-      const id = option.selectedNode.id.get();
-      const contextId = option.context.id.get();
 
       if (typeSelected === BACNET_ORGAN_TYPE) return true;
 
-      if (typeSelected === SpinalBmsNetwork.nodeTypeName) {
-         const organ = await utilities.getOrgan(id, contextId);
+      if (typeSelected !== SpinalBmsNetwork.nodeTypeName) return -1;
 
-         return organ && organ.type.get() == BACNET_ORGAN_TYPE ? true : -1;
-      }
+      const id = option.selectedNode.id.get();
+      const contextId = option.context.id.get();
 
+      const node = SpinalGraphService.getRealNode(id);
+      const context = SpinalGraphService.getRealNode(contextId);
 
-      return -1;
+      const organ = await utilities.getOrgan(node, context);
+
+      return organ && organ.getType().get() == BACNET_ORGAN_TYPE ? true : -1;
    }
 
    action(option) {

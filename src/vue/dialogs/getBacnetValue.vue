@@ -6,15 +6,17 @@
          <!-- Selection Page (select sensor types) -->
          <div class="itemList" v-if="pageSelected === PAGES.selection">
             <div class="itemList-item" v-for="item in sensor_types" :key="item.id">
-               <md-checkbox class="md-primary" v-model="item.checked" />
-               <span class="md-list-item-text">{{ item.name }}</span>
+               <md-checkbox class="md-primary" v-model="item.checked">
+                  {{ item.name }}
+               </md-checkbox>
+               <!-- <span class="md-list-item-text"></span> -->
             </div>
          </div>
 
          <!-- Devices Progress Page -->
          <div class="devicesProgress" v-else-if="pageSelected === PAGES.creation">
 
-            <div class="device" v-for="device in nodes" :key="device.id">
+            <div class="device" v-for="device in devices" :key="device.info.id">
                <div class="name">{{ device.info.name }}</div>
 
                <div class="progress-bar" v-if="device.progress != -1">
@@ -91,8 +93,16 @@ export default {
          this.selectedNode = option.selectedNode;
 
 
-         this.devices = await this.getBmsDevices(this.context, this.selectedNode);
-         this.network = await Utilities.getNetwork(this.context, this.selectedNode);
+         const promises = [
+            Utilities.getNetwork(this.selectedNode, this.context),
+            this.getBmsDevices(this.context, this.selectedNode)
+         ];
+
+         const [network, devices] = await Promise.all(promises);
+
+         this.network = network;
+         this.devices = devices;
+
          // this.network = await this._getNetwork(this.context, this.selectedNode);
 
          this.pageSelected = this.PAGES.selection;
@@ -326,7 +336,7 @@ export default {
    width: 100%;
    /* height: 100%; */
    display: flex;
-   justify-content: space-between;
+   /* justify-content: space-between; */
    /* align-items: flex-start; */
    flex-wrap: wrap;
    padding-top: 20px;

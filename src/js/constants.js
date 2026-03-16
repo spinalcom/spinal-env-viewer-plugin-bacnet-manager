@@ -84,4 +84,10 @@ export const SENSOR_TYPES = [
     value: ObjectTypes.OBJECT_MULTI_STATE_VALUE,
     id: ObjectTypes.OBJECT_MULTI_STATE_VALUE,
   },
+  {
+    name: "BITSTRING VALUE",
+    checked: true,
+    value: ObjectTypes.BITSTRING_VALUE,
+    id: ObjectTypes.BITSTRING_VALUE,
+  },
 ];

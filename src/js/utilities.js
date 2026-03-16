@@ -53,12 +53,10 @@ export default class Utils {
   }
 
   static getOrgan(network, context) {
-    return network.getParents([SpinalBmsNetwork.relationName]).then((parents) => {
 
-      return parents.find((el) => {
-        if (el && el.contextIds) return el.contextIds[context.getId().get()];
-        return false;
-      });
+    return network.getParents([SpinalBmsNetwork.relationName]).then((parents) => {
+      const contextId = context.getId().get();
+      return parents.find((parent) => !!(parent && parent.contextIds && parent.contextIds[contextId]));
 
     });
   }

@@ -25,35 +25,23 @@ class ManageMonitoring extends SpinalContextApp {
 
    async isShown(option) {
 
-      const id = option.selectedNode.id.get();
       const type = option.selectedNode.type.get();
+
+      if (type !== SpinalBmsDevice.nodeTypeName && type !== SpinalBmsNetwork.nodeTypeName) return -1;
+
+      const id = option.selectedNode.id.get();
       const contextId = option.context.id.get();
-      let network = type === SpinalBmsNetwork.nodeTypeName ? SpinalGraphService.getRealNode(id) : type === SpinalBmsDevice.nodeTypeName && await utilities.getNetwork(id, contextId);
 
-      if (network) {
-         const networkId = network.getId().get();
-         const organ = await utilities.getOrgan(networkId, contextId);
-         return organ && organ.type.get() == BACNET_ORGAN_TYPE ? true : -1;
-      }
+      const node = SpinalGraphService.getRealNode(id);
+      const context = SpinalGraphService.getRealNode(contextId);
 
-      return -1;
+      let network = await utilities.getNetwork(node, context);
 
+      if (!network) return -1;
 
+      const organ = await utilities.getOrgan(network, context);
+      return organ && organ.getType().get() == BACNET_ORGAN_TYPE ? true : -1;
 
-      // const type = option.selectedNode.type.get();
-
-      // if (type === SpinalBmsNetwork.nodeTypeName) {
-      //    return true;
-      // } else if (type === SpinalBmsDevice.nodeTypeName) {
-      //    const realNode = SpinalGraphService.getRealNode(option.selectedNode.id.get())
-      //    const model = await utilities.getModel(realNode);
-
-      //    if (model && model !== -1 && model.listen && model.listen.get()) return -1;
-
-      //    return true;
-      // }
-
-      // return -1;
    }
 
    async action(option) {
