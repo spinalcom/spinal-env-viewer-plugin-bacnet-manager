@@ -23,24 +23,17 @@ with this file. If not, see
 -->
 
 <template>
-  <div class="devices_table"
-       v-if="show === STATES.discovered">
+  <div class="devices_table" v-if="show === STATES.discovered">
     <div class="header">
-      <div>{{selected.length}} selected / {{devices.length}} found</div>
+      <div>{{ selected.length }} selected / {{ devices.length }} found</div>
       <!-- <div>{{devices.length}} controller(s) found</div> -->
     </div>
 
-    <md-table class="tablecontent"
-              v-model="devices"
-              @md-selected="onSelect">
+    <md-table class="tablecontent" v-model="devices" @md-selected="onSelect">
       <!-- md-fixed-header -->
 
-      <md-table-row slot="md-table-row"
-                    slot-scope="{ item }"
-                    md-selectable="multiple"
-                    md-auto-select>
-        <md-table-cell md-label="Name"
-                       md-sort-by="name">{{ item.name }}</md-table-cell>
+      <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="multiple" md-auto-select>
+        <md-table-cell md-label="Name" md-sort-by="name">{{ item.name }}</md-table-cell>
 
         <md-table-cell md-label="deviceId">{{ item.deviceId }}</md-table-cell>
 
@@ -62,28 +55,22 @@ with this file. If not, see
     </md-table>
   </div>
 
-  <div class="discover_container"
-       v-else>
+  <div class="discover_container" v-else>
 
-    <div class="description">{{label}}</div>
+    <div class="description">{{ label }}</div>
     <div class="buttons">
-      <md-button class="md-primary md-raised"
-                 v-if="show === STATES.reseted"
-                 @click="discover"
-                 :disabled="disabledBtn()">Discover</md-button>
+      <md-button class="md-primary md-raised" v-if="show === STATES.initial" @click="discover"
+        :disabled="disabledBtn()">Discover</md-button>
 
-      <md-button class="md-primary md-raised"
-                 v-else-if="show === STATES.timeout"
-                 @click="discover">Retry</md-button>
+      <md-button v-else-if="show === STATES.timeout" class="md-primary md-raised" @click="discover">Retry </md-button>
 
-      <div class="loading"
-           v-else-if="show === STATES.discovering">
+
+      <div class="loading" v-else-if="show === STATES.discovering">
         <div>
           <md-progress-spinner md-mode="indeterminate"></md-progress-spinner>
         </div>
         <div>
-          <md-button class="md-accent md-raised"
-                     @click="stop">Stop</md-button>
+          <md-button class="md-accent md-raised" @click="stop">Stop</md-button>
         </div>
 
       </div>
@@ -92,7 +79,7 @@ with this file. If not, see
   </div>
 </template>
 <script>
-import { STATES } from "../../js/stateEnum";
+import { STATES, DISCOVER_MESSAGES } from "../../js/stateEnum";
 
 export default {
   name: "discoverTable",
@@ -104,21 +91,26 @@ export default {
   },
   data() {
     this.STATES = STATES;
+
     return {
-      label: "Discover network to find devices",
-      show: STATES.reseted,
+      label: DISCOVER_MESSAGES[STATES.initial],
+      show: STATES.initial,
     };
   },
   methods: {
     disabledBtn() {
-      if (this.network.name.trim().length === 0) return true;
-      if (this.network.useBroadcast) {
-        if (this.network.address.length === 0) return true;
-        if (this.network.port.length === 0) return true;
-      } else {
-        if (this.network.ips.length === 0) return true;
-      }
+      // if the name is empty
+      if (this.network.name.trim().length === 0)
+        return true;
 
+      // if the broadcast is used and the address or the port is empty
+      if (this.network.useBroadcast && (this.network.address.trim().length === 0) || this.network.port.trim().length === 0)
+        return true;
+
+      // if the broadcast is not used and the ips list is empty
+      if (this.network.ips.length === 0) return true;
+
+      // else
       return false;
     },
 
@@ -139,16 +131,16 @@ export default {
       this.show = this.state;
       switch (this.state) {
         case STATES.reseted:
-          this.label = "Discover network to find devices";
+          this.label = DISCOVER_MESSAGES[STATES.reseted];
           break;
         case STATES.discovering:
-          this.label = "Discovering";
+          this.label = DISCOVER_MESSAGES[STATES.discovering];
           break;
         case STATES.timeout:
-          this.label = "Timeout, no device found !";
+          this.label = DISCOVER_MESSAGES[STATES.timeout];
           break;
         case STATES.error:
-          this.label = "oups !";
+          this.label = DISCOVER_MESSAGES[STATES.error];
           break;
         default:
           break;

@@ -138,12 +138,11 @@ export default {
     async discover() {
       if (!this.spinalDiscover) {
         this.spinalDiscover = new SpinalDiscoverModel(this.graph, this.context, this.organ, this.network);
-
         await this.spinalDiscover.addToGraph();
+        this._bindDevice();
       }
 
       this.spinalDiscover.setDiscoveringState();
-      this._bindDevice();
     },
 
     async createNodes() {
