@@ -211,7 +211,7 @@ export default class Utils {
 
   static async _createListenerModel(graph, context, network, organ, deviceNode, profile) {
     const spinalListener = new SpinalListenerModel(graph, context, organ, network, deviceNode, profile);
-    await deviceNode.addToGraph();
+    await spinalListener.addToGraph();
 
     return spinalListener;
   }

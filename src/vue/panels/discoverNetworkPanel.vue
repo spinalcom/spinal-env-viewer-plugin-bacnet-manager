@@ -68,7 +68,18 @@ with this file. If not, see
 
             <md-icon v-else-if="state === STATES.created" class="md-size-5x">check</md-icon>
 
-            <md-button v-else :disabled="selected.length === 0" @click="createNodes">Create Network</md-button>
+            <div v-else-if="state === STATES.error">
+              Something went wrong during the creation of the network, please
+              <md-button class="md-dense md-primary" @click="createNodes">
+                try again
+              </md-button>
+
+            </div>
+
+
+            <md-button v-else :disabled="selected.length === 0" @click="createNodes">
+              Create Network
+            </md-button>
           </div>
         </div>
       </md-step>
