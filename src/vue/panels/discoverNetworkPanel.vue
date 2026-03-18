@@ -122,7 +122,7 @@ export default {
       network: {
         useBroadcast: true,
         address: "255.255.255.255",
-        port: 47808,
+        port: "47808",
         name: "",
         type: NETWORK_TYPE,
         ips: [{ id: 0, address: "", deviceId: "" }],

@@ -178,6 +178,7 @@ export default class Utils {
   }
 
   static async createOrModifyListenerModel(graph, context, network, listenerModel, profile, organNode, deviceNode) {
+    console.log("createOrModifyListenerModel", { listenerModel });
     if (listenerModel && listenerModel != -1) {
       return this._modListenerModel(listenerModel, profile);
     }
@@ -193,7 +194,7 @@ export default class Utils {
 
     return listenerModel;
     // if (!monitoringInfo) {
-    //   listenerModel.listen.set(false);
+    //   listenerModel.monitored.set(false);
     //   return -1;
     // }
 
@@ -205,12 +206,18 @@ export default class Utils {
     //   });
     // }
 
-    // listenerModel.listen.set(true);
+    // listenerModel.monitored.set(true);
     // return listenerModel;
   }
 
   static async _createListenerModel(graph, context, network, organ, deviceNode, profile) {
+    if (!graph || !context || !organ || !network || !deviceNode || !profile) {
+      console.error("Missing parameters to create listener model", { graph, context, organ, network, deviceNode, profile });
+      return -1;
+    }
+
     const spinalListener = new SpinalListenerModel(graph, context, organ, network, deviceNode, profile);
+    console.log("spinalListener", spinalListener);
     await spinalListener.addToGraph();
 
     return spinalListener;

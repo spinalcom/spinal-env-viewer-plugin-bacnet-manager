@@ -89,13 +89,13 @@ export default {
     async startMonitoring() {
       const model = await utilities.createOrModifyListenerModel(this.graph, this.context, this.network, this.listenerModel, this.profile, this.organ, this.device);
       this.listenerModel = model;
-      this.listenerModel.listen.set(true);
+      this.listenerModel.monitored.set(true);
       return this.listenerModel;
     },
 
     stopMonitoring() {
-      if (this.listenerModel && this.listenerModel.listen) {
-        this.listenerModel.listen.set(false)
+      if (this.listenerModel && this.listenerModel.monitored) {
+        this.listenerModel.monitored.set(false)
       };
       return this.listenerModel;
     },
@@ -123,7 +123,7 @@ export default {
 
     disabledRestart() {
       if (!this.listenerModel || this.listenerModel == -1 || !this.profile) return true;
-      if (!this.listenerModel.listen || !this.listenerModel.listen.get()) return true;
+      if (!this.listenerModel.monitored || !this.listenerModel.monitored.get()) return true;
 
       return false;
     },
@@ -131,12 +131,12 @@ export default {
     disabledStart() {
       if (!this.profile) return true;
 
-      return this.listenerModel && this.listenerModel !== -1 && this.listenerModel.listen && this.listenerModel.listen.get();
+      return this.listenerModel && this.listenerModel !== -1 && this.listenerModel.monitored && this.listenerModel.monitored.get();
     },
 
     disabledStop() {
       if (!this.listenerModel || this.listenerModel == -1 || !this.profile) return true;
-      if (!this.listenerModel.listen || !this.listenerModel.listen.get()) return true;
+      if (!this.listenerModel.monitored || !this.listenerModel.monitored.get()) return true;
 
       return false;
     },
@@ -144,7 +144,7 @@ export default {
   },
   computed: {
     state() {
-      return this.listenerModel && this.listenerModel.listen && this.listenerModel.listen.get() ? "Running" : "Stopped";
+      return this.listenerModel && this.listenerModel.monitored && this.listenerModel.monitored.get() ? "Running" : "Stopped";
     },
     // hasProfil() {
     //   return this.profile && this.profile !== -1;
