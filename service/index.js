@@ -35,40 +35,45 @@ export class SpinalBacnetPluginService {
 
   static addToReference(organServerId, contextId) {
     const organModel = FileSystem._objects[organServerId];
-    if (organModel) {
-      const nodeId = SpinalGraphService.createNode(
-        {
-          name: organModel.name.get(),
-          networkName: organModel.name.get(),
-          type: organModel.type.get(),
-        },
-        organModel
-      );
-      const realNode = SpinalGraphService.getRealNode(nodeId);
-      organModel.addReference(contextId, realNode);
-      return SpinalGraphService.addChildInContext(
-        contextId,
-        nodeId,
-        contextId,
-        SpinalOrganConfigModel.CONTEXT_TO_ORGAN_RELATION,
-        SPINAL_RELATION_PTR_LST_TYPE
-      );
+    const context = SpinalGraphService.getRealNode(contextId);
+
+    if (organModel && context) {
+      return organModel.linkOrganToContext(context);
+      // const nodeId = SpinalGraphService.createNode(
+      //   {
+      //     name: organModel.name.get(),
+      //     networkName: organModel.name.get(),
+      //     type: organModel.type.get(),
+      //   },
+      //   organModel
+      // );
+      // const realNode = SpinalGraphService.getRealNode(nodeId);
+      // organModel.addReference(contextId, realNode);
+      // return SpinalGraphService.addChildInContext(
+      //   contextId,
+      //   nodeId,
+      //   contextId,
+      //   SpinalOrganConfigModel.CONTEXT_TO_ORGAN_RELATION,
+      //   SPINAL_RELATION_PTR_LST_TYPE
+      // );
     }
     return Promise.reject("No model found for this server_id");
   }
 
   static removeToReference(organServerId, contextId) {
     const organModel = FileSystem._objects[organServerId];
-    if (organModel) {
-      return organModel.removeReference(contextId).then((node) => {
-        const childId = node.getId().get();
-        SpinalGraphService.removeChild(
-          contextId,
-          childId,
-          SpinalOrganConfigModel.CONTEXT_TO_ORGAN_RELATION,
-          SPINAL_RELATION_PTR_LST_TYPE
-        );
-      });
+    const context = SpinalGraphService.getRealNode(contextId);
+    if (organModel && context) {
+      return organModel.unlinkOrganFromContext(context);
+      // return organModel.removeReference(contextId).then((node) => {
+      //   const childId = node.getId().get();
+      //   SpinalGraphService.removeChild(
+      //     contextId,
+      //     childId,
+      //     SpinalOrganConfigModel.CONTEXT_TO_ORGAN_RELATION,
+      //     SPINAL_RELATION_PTR_LST_TYPE
+      //   );
+      // });
     }
     throw new Error("No model found for this server_id");
   }

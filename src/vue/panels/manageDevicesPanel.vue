@@ -104,7 +104,7 @@ export default {
   methods: {
     async opened({ context, graph, selectedNode }) {
       this.pageSelected = this.PAGES.loading;
-      this.setPanelTitle(selectedNode.name); // change panel title
+      this.setPanelTitle(selectedNode.getName().get()); // change panel title
       monitorState.clear();
 
       try {
@@ -220,7 +220,8 @@ export default {
     },
 
     setPanelTitle(title) {
-      spinalPanelManagerService.panels.manageDevicesPanel.panel.setTitle(`Manage devices monitoring : ${title}`);
+      const titlePrefix = "Manage devices monitoring";
+      spinalPanelManagerService.panels.manageDevicesPanel.panel.setTitle(`${titlePrefix} : ${title}`);
     },
 
     execFunction(array, callback) {
