@@ -90,4 +90,10 @@ export const SENSOR_TYPES = [
     value: ObjectTypes.OBJECT_BITSTRING_VALUE,
     id: ObjectTypes.OBJECT_BITSTRING_VALUE,
   },
+   {
+    name: "LOOP",
+    checked: true,
+    value: ObjectTypes.OBJECT_LOOP,
+    id: ObjectTypes.OBJECT_LOOP,
+  },
 ];
