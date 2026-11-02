@@ -10,7 +10,6 @@ import { DeviceProfileUtilities } from "spinal-env-viewer-plugin-network-tree-se
 import { Pbr } from "spinal-core-connectorjs";
 
 export default class Utils {
-
   static async getBmsDevices(context, selectedNode) {
     const type = selectedNode.getType().get();
 
@@ -21,7 +20,7 @@ export default class Utils {
 
     // if it's a network we return its children
     if (type === SpinalBmsNetwork.nodeTypeName) {
-      return selectedNode.getChildren([SpinalBmsDevice.relationName])
+      return selectedNode.getChildren([SpinalBmsDevice.relationName]);
     }
 
     // else we try to find the device in the context
@@ -53,11 +52,9 @@ export default class Utils {
   }
 
   static getOrgan(network, context) {
-
     return network.getParents([SpinalBmsNetwork.relationName]).then((parents) => {
       const contextId = context.getId().get();
       return parents.find((parent) => !!(parent && parent.contextIds && parent.contextIds[contextId]));
-
     });
   }
 
@@ -78,10 +75,17 @@ export default class Utils {
       if (!this.hasProfilLinked(deviceId)) return -1;
 
       const model = argModel && argModel !== -1 ? argModel : await this.getModel(deviceId);
-      if (model != -1) model.listen.set(false);
+
+      if (model != -1) model.monitored.set(false);
     } catch (error) {
       console.error(error);
     }
+  }
+
+  static async getModel(deviceId) {
+    const device = SpinalGraphService.getRealNode(deviceId);
+    if (!device) return -1;
+    return this.getListenerModel(device);
   }
 
   static async getProfilIntervals(profilId) {
@@ -89,12 +93,14 @@ export default class Utils {
 
     const promises = intervalsNodes.map(async (el) => ({ monitoring: await this.getSharedAttribute(el), children: await this.getEndpointsObjectIds(el) }));
 
-    return Promise.all(promises).then((result) => {
-      return result;
-    }).catch((err) => {
-      console.error(err);
-      return [];
-    });
+    return Promise.all(promises)
+      .then((result) => {
+        return result;
+      })
+      .catch((err) => {
+        console.error(err);
+        return [];
+      });
   }
 
   static async getSharedAttribute(intervalNode) {
@@ -161,7 +167,6 @@ export default class Utils {
   }
 
   static async getProfilLinkedToDevice(device) {
-
     const profiles = await device.getChildren(["hasBacnetProfile"]);
     if (profiles.length === 0) return;
 
@@ -179,6 +184,7 @@ export default class Utils {
 
   static async createOrModifyListenerModel(graph, context, network, listenerModel, profile, organNode, deviceNode) {
     console.log("createOrModifyListenerModel", { listenerModel });
+
     if (listenerModel && listenerModel != -1) {
       return this._modListenerModel(listenerModel, profile);
     }
@@ -224,10 +230,21 @@ export default class Utils {
   }
 
   static waitModelReady(model) {
+    const globalThis = window;
+
     return new Promise((resolve, reject) => {
+
       const timeId = setInterval(() => {
-        if (FileSystem._objects[model._server_id] === model) {
-          console.log("model ready", FileSystem._objects[model._server_id]);
+        const isInvalid = !globalThis || !globalThis.FileSystem || !globalThis.FileSystem._objects || !model || !model._server_id;
+
+        if (isInvalid) {
+          clearInterval(timeId);
+          resolve(model);
+          return;
+        }
+
+        if (globalThis.FileSystem._objects[model._server_id] === model) {
+          console.log("model ready", globalThis.FileSystem._objects[model._server_id]);
           clearInterval(timeId);
           resolve(model);
         }

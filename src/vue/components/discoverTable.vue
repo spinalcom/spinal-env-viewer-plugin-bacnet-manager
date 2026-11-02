@@ -100,15 +100,19 @@ export default {
   methods: {
     disabledBtn() {
       // if the name is empty
-      if (this.network.name.trim().length === 0)
-        return true;
+      if (String(this.network.name || "").trim().length === 0) return true;
+      if (String(this.network.port || "").trim().length === 0) return true;
+      if (String(this.network.apduTimeout || "").trim().length === 0) return true;
 
-      // if the broadcast is used and the address or the port is empty
-      if (this.network.useBroadcast && (this.network.address.trim().length === 0) || this.network.port.trim().length === 0)
-        return true;
+      const mode = this.network.discoveryMode || (this.network.useBroadcast ? "broadcast" : "unicast");
 
-      // if the broadcast is not used and the ips list is empty
-      if (this.network.ips.length === 0) return true;
+      const validTargets = (this.network.ips || []).filter((el) => {
+        if (!el || typeof el.address !== "string") return false;
+        return el.address.trim().length > 0;
+      });
+
+      if (!["broadcast", "unicast"].includes(mode)) return true;
+      if (mode === "unicast" && validTargets.length === 0) return true;
 
       // else
       return false;
@@ -130,9 +134,6 @@ export default {
     state() {
       this.show = this.state;
       switch (this.state) {
-        case STATES.reseted:
-          this.label = DISCOVER_MESSAGES[STATES.reseted];
-          break;
         case STATES.discovering:
           this.label = DISCOVER_MESSAGES[STATES.discovering];
           break;

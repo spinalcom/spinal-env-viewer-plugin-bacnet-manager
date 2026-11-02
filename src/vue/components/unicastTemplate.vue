@@ -25,11 +25,6 @@ with this file. If not, see
 <template>
   <div class="unicast_container"
        v-if="!isLoading">
-    <md-field class="contextInput">
-      <label>Network Name</label>
-      <md-input v-model="network.name"></md-input>
-    </md-field>
-
     <div class="header">
       <div class="button_div addRow"
            @click="addRow">add row</div>
@@ -75,14 +70,11 @@ export default {
   methods: {
     addRow() {
       const id = this.network.ips.length;
-      this.network.ips = [
-        ...this.network.ips,
-        { id: id, address: "", deviceId: "" },
-      ];
+      this.network.ips = [...this.network.ips, { id: id, process: "unicast", address: "", deviceId: "" }];
     },
 
     reset() {
-      this.network.ips = [{ id: 0, address: "", deviceId: "" }];
+      this.network.ips = [{ id: 0, process: "unicast", address: "", deviceId: "" }];
     },
 
     removeItem(id) {
@@ -110,6 +102,7 @@ export default {
               if (Object.hasOwnProperty.call(dataJson, key)) {
                 const data = dataJson[key].map((element) => {
                   return {
+                    process: "unicast",
                     address: this.getElementAddress(element),
                     deviceId: this.getElementDeviceId(element),
                   };

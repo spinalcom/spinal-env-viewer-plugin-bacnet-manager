@@ -2,6 +2,16 @@
    <div class="input_container">
       <div class="input">
          <md-field class="contextInput">
+            <label>Process</label>
+            <md-select v-model="item.process">
+               <md-option value="unicast">Unicast</md-option>
+               <md-option value="bbmd">BBMD</md-option>
+            </md-select>
+         </md-field>
+      </div>
+
+      <div class="input">
+         <md-field class="contextInput">
             <label>Address</label>
             <md-input v-model="item.address"></md-input>
          </md-field>
@@ -52,7 +62,7 @@ export default {
 }
 
 .input_container .input {
-   width: 40%;
+   width: 28%;
 }
 
 .input_container .remove {

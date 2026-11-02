@@ -40,12 +40,25 @@ class DiscoverNetworkBtn extends SpinalContextApp {
       return organ && organ.getType().get() == BACNET_ORGAN_TYPE ? true : -1;
    }
 
-   action(option) {
+   async action(option) {
+
+      const selectedNode = SpinalGraphService.getRealNode(option.selectedNode.id.get());
+      const context = SpinalGraphService.getRealNode(option.context.id.get());
+
+      const organ = await utilities.getOrgan(selectedNode, context);
+      let networkInfo = null;
+
+      if (selectedNode.getType().get() === SpinalBmsNetwork.nodeTypeName) {
+         networkInfo = selectedNode.info.get();
+      }
+
       const params = {
          graph: SpinalGraphService.getGraph(),
-         context: SpinalGraphService.getRealNode(option.context.id.get()),
-         organ: SpinalGraphService.getRealNode(option.selectedNode.id.get())
+         context,
+         organ,
+         networkInfo
       }
+
       spinalPanelManagerService.openPanel("discoverNetworkPanel", params);
    }
 

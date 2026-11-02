@@ -68,7 +68,6 @@ with this file. If not, see
 import DeviceMonitoring from "../components/monitoring/devicemonitor.vue";
 import { spinalEventEmitter } from "spinal-env-viewer-plugin-event-emitter";
 import utilities from "../../js/utilities";
-import { monitorState } from "../../js/monitorState";
 
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 
@@ -105,7 +104,6 @@ export default {
     async opened({ context, graph, selectedNode }) {
       this.pageSelected = this.PAGES.loading;
       this.setPanelTitle(selectedNode.getName().get()); // change panel title
-      monitorState.clear();
 
       try {
 
@@ -117,9 +115,7 @@ export default {
 
         this.devices = await this.getBmsDevices(context, selectedNode);
 
-        // await this.saveProfilIds(profilIds);
 
-        // console.log(monitorState);
         this.pageSelected = this.PAGES.selection;
       } catch (error) {
         console.error(error);
@@ -139,13 +135,6 @@ export default {
 
       return Promise.all(promises);
     },
-
-    // saveProfilIds(profilIds) {
-    //   const promises = profilIds.map((id) => monitorState.addProfile(id));
-    //   return Promise.resolve(promises);
-    // },
-
-
 
     getReferences() {
       return this.devices.reduce((acc, { device }) => {

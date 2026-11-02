@@ -59,7 +59,6 @@ with this file. If not, see
 
 <script>
 import utilities from "../../../js/utilities";
-import { monitorState } from "../../../js/monitorState";
 
 export default {
   name: "deviceMonitoring",
