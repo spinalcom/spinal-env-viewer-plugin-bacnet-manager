@@ -4,6 +4,7 @@ import { SpinalForgeExtention } from "spinal-env-viewer-panel-manager-service_sp
 import DiscoverNetworkPanel from "./discoverNetworkPanel.vue";
 import ManageDevicesPanel from "./manageDevicesPanel.vue";
 import MonitorConnectorPanel from "./monitorConnectorPanel.vue";
+import IndicatorDetailsPanel from "./indicator_details.vue";
 
 const panels = [
    {
@@ -41,6 +42,19 @@ const panels = [
       },
       style: {
          minWidth: '620px',
+         height: "670px",
+         left: "400px",
+      },
+   },
+   {
+      name: "indicator_details",
+      vueMountComponent: Vue.extend(IndicatorDetailsPanel),
+      panel: {
+         title: "Indicator details",
+         closeBehaviour: "hide",
+      },
+      style: {
+         minWidth: "620px",
          height: "670px",
          left: "400px",
       },

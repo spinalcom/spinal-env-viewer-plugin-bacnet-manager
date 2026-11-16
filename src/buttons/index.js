@@ -13,6 +13,7 @@ import unLinkProfilToBmsDevice from "./viewer/unLinkProfil";
 
 import createBacnetValue from "./bacnet/createBacnetValue";
 import manageMonitoring from "./bacnet/monitoring";
+import indicatorDetails from "./bacnet/indicatorDetails";
 import organBacnetMonitor from "./bacnet/organBacnetMonitor";
 import createSubNetworkBtn from "./bacnet/createSubNetwork";
 
@@ -31,5 +32,6 @@ export {
 
    createBacnetValue,
    manageMonitoring,
+   indicatorDetails,
    organBacnetMonitor
 }
