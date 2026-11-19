@@ -3,11 +3,9 @@ import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
+import { SIDEBAR } from "../constants";
 
 import utilities from "../../js/utilities";
-
-
-const SIDEBAR = "GraphManagerSideBar";
 
 
 class ManageMonitoring extends SpinalContextApp {

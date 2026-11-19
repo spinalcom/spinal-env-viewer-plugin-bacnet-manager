@@ -8,6 +8,8 @@ import UnLinkProfilToBmsDeviceDialog from "./unLinkToProfilDialog.vue";
 import LinkToBimAutomateDialog from "./linkToBimAutomate.vue";
 import GetBacnetValueDialog from "./getBacnetValue.vue";
 import CreateSubnetworkDialog from "./createSubNetwork.vue";
+import CreateDeviceDialog from "./createDevice.vue";
+import GenerateTreeFromProfileDialog from "./generateTreeFromProfile.vue";
 
 const { SpinalMountExtention } = require("spinal-env-viewer-panel-manager-service");
 
@@ -16,6 +18,16 @@ const dialogs = [
    {
       name: "createSubNetworkDialog",
       vueMountComponent: Vue.extend(CreateSubnetworkDialog),
+      parentContainer: document.body
+   },
+   {
+      name: "createBmsDeviceDialog",
+      vueMountComponent: Vue.extend(CreateDeviceDialog),
+      parentContainer: document.body
+   },
+   {
+      name: "generateTreeFromProfileDialog",
+      vueMountComponent: Vue.extend(GenerateTreeFromProfileDialog),
       parentContainer: document.body
    },
    {

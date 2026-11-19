@@ -1,7 +1,7 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 import { CONTEXT_TYPE } from "../../js/constants";
-const SIDEBAR = "GraphManagerSideBar";
+import { SIDEBAR } from "../constants";
 
 
 class AddOrganButton extends SpinalContextApp {

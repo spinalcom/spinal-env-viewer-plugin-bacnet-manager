@@ -2,12 +2,11 @@ import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-co
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
+import { SIDEBAR } from "../constants";
 
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 
 import utilities from "../../js/utilities";
-
-const SIDEBAR = "GraphManagerSideBar";
 
 class IndicatorDetailsBtn extends SpinalContextApp {
    constructor() {

@@ -3,11 +3,9 @@ import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
 import { SpinalBmsNetwork } from "spinal-model-bmsnetwork";
+import { SIDEBAR } from "../constants";
 
 import utilities from "../../js/utilities";
-
-const SIDEBAR = "GraphManagerSideBar";
-
 
 class CreateSubNetworkBtn extends SpinalContextApp {
     constructor() {

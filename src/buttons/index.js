@@ -12,6 +12,8 @@ import linkProfilToBmsDevice from "./viewer/linkProfil";
 import unLinkProfilToBmsDevice from "./viewer/unLinkProfil";
 
 import createBacnetValue from "./bacnet/createBacnetValue";
+import createDeviceBtn from "./bacnet/createDevice";
+import generateTreeFromProfileBtn from "./bacnet/generateTreeFromProfile";
 import manageMonitoring from "./bacnet/monitoring";
 import indicatorDetails from "./bacnet/indicatorDetails";
 import organBacnetMonitor from "./bacnet/organBacnetMonitor";
@@ -31,6 +33,8 @@ export {
    locateBimObject,
 
    createBacnetValue,
+   createDeviceBtn,
+   generateTreeFromProfileBtn,
    manageMonitoring,
    indicatorDetails,
    organBacnetMonitor

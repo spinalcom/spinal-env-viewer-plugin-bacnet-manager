@@ -3,12 +3,10 @@ import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 
 import { spinalPanelManagerService } from "spinal-env-viewer-panel-manager-service";
 import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
+import { SIDEBAR } from "../constants";
 
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import utilities from "../../js/utilities";
-
-const SIDEBAR = "GraphManagerSideBar";
-
 
 class LinkBmsDeviceToBim extends SpinalContextApp {
    constructor() {

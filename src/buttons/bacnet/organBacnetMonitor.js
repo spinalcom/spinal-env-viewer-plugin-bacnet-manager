@@ -1,9 +1,7 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 import { SpinalOrganConfigModel, BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
-
-
-const SIDEBAR = "GraphManagerSideBar";
+import { SIDEBAR } from "../constants";
 
 
 class MonitorConnectorBtn extends SpinalContextApp {

@@ -8,9 +8,7 @@ import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 
 import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
 import utilities from "../../js/utilities";
-
-
-const SIDEBAR = "GraphManagerSideBar";
+import { SIDEBAR } from "../constants";
 
 
 class LinkProfilToBmsDevice extends SpinalContextApp {

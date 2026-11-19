@@ -5,11 +5,9 @@ import { SpinalBmsDevice, SpinalBmsEndpoint } from "spinal-model-bmsnetwork";
 import { BIM_OBJECT_TYPE } from "spinal-env-viewer-plugin-forge/dist/Constants";
 
 import { utilities } from "spinal-env-viewer-plugin-standard_button/js/utilities";
+import { SIDEBAR } from "../constants";
 
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
-
-const SIDEBAR = "GraphManagerSideBar";
-
 
 class LocateBimObjectBtn extends SpinalContextApp {
    constructor() {

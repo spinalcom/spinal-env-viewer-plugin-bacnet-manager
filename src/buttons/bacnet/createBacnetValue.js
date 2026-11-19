@@ -2,12 +2,12 @@ import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-co
 import { SpinalGraph, SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { SpinalBmsDevice, SpinalBmsNetwork } from "spinal-model-bmsnetwork";
 import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
+import { SIDEBAR } from "../constants";
 
 import utilities from "../../js/utilities";
 
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
 
-const SIDEBAR = "GraphManagerSideBar";
 const icon = require("../../assets/add.svg");
 
 class CreateBacnetValue extends SpinalContextApp {

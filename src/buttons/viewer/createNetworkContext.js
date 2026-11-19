@@ -1,8 +1,6 @@
 import { SpinalContextApp, spinalContextMenuService } from "spinal-env-viewer-context-menu-service";
 const { spinalPanelManagerService } = require("spinal-env-viewer-panel-manager-service");
-
-const HEADERBAR = "GraphManagerTopBar";
-
+import { HEADERBAR } from "../constants";
 
 class CreateNetworkContextBtn extends SpinalContextApp {
    constructor() {

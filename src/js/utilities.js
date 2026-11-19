@@ -91,16 +91,13 @@ export default class Utils {
   static async getProfilIntervals(profilId) {
     const intervalsNodes = await DeviceProfileUtilities.getIntervalNodes(profilId);
 
-    const promises = intervalsNodes.map(async (el) => ({ monitoring: await this.getSharedAttribute(el), children: await this.getEndpointsObjectIds(el) }));
+    if (!intervalsNodes) return [];
 
-    return Promise.all(promises)
-      .then((result) => {
-        return result;
-      })
-      .catch((err) => {
-        console.error(err);
-        return [];
-      });
+    return Promise.all(intervalsNodes.map(async (interval) => ({
+      name: interval.name.get(),
+      monitoring: await this.getSharedAttribute(interval),
+      children: await this.getEndpointsObjectIds(interval),
+    })));
   }
 
   static async getSharedAttribute(intervalNode) {
@@ -122,6 +119,7 @@ export default class Utils {
 
     const promises = profilItems.map(async (profilItem) => {
       return {
+        name: profilItem.name.get(),
         instance: await this.getIDX(profilItem.id.get()),
         type: this._getBacnetObjectType(profilItem.type.get()),
       };

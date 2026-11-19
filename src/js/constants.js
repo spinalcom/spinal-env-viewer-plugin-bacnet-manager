@@ -1,6 +1,10 @@
 const bacnet = require("bacstack");
 const ObjectTypes = bacnet.enum.ObjectTypes;
 
+export const ObjectTypesCodeToName = Object.fromEntries(
+  Object.entries(ObjectTypes).map(([key, value]) => [value, key])
+);
+
 export const NETWORK_TYPE = "GTBNetwork";
 export const CONTEXT_TYPE = "Network";
 
@@ -29,6 +33,7 @@ export const SENSOR_TYPES = [
     checked: true,
     value: ObjectTypes.OBJECT_ANALOG_INPUT,
     id: ObjectTypes.OBJECT_ANALOG_INPUT,
+
   },
   {
     name: "ANALOG OUTPUT",
@@ -90,7 +95,7 @@ export const SENSOR_TYPES = [
     value: ObjectTypes.OBJECT_BITSTRING_VALUE,
     id: ObjectTypes.OBJECT_BITSTRING_VALUE,
   },
-   {
+  {
     name: "LOOP",
     checked: true,
     value: ObjectTypes.OBJECT_LOOP,

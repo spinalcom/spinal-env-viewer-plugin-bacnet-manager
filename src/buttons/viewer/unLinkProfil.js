@@ -6,10 +6,9 @@ import {
 
 import { BACNET_ORGAN_TYPE } from "spinal-model-bacnet";
 import { SpinalGraphService } from "spinal-env-viewer-graph-service";
+import { SIDEBAR } from "../constants";
 
 import utilities from "../../js/utilities";
-
-const SIDEBAR = "GraphManagerSideBar";
 
 
 class UnLinkProfilToBmsDevice extends SpinalContextApp {
